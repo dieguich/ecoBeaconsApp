@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Overview
 
 This is an Eclipse reference app for the Android Beacon Library supporting AltBeacon compatible devices
@@ -19,3 +20,9 @@ imported into Eclipse before this project can be imported.  This library open so
 gradle build system (normally used with Android Studio not Eclipse), so if you want to build it from
 source you need to set up that build environment.  Alternately, you may download a binary copy of the
 AndroidBeaconLibrary-2.x.tar.gz file, and extract it for import into Eclipse.
+=======
+ecoBeaconsApp
+=============
+
+eco-challenges in Android + iBeacons
+>>>>>>> 335a4986431ec8d7a0b1fc9fe21f89ab1ae07390

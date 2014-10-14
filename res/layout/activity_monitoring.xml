@@ -1,0 +1,41 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/container"
+    tools:context=".MonitoringActivity"
+    tools:ignore="MergeRootFrame" >
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Visible iBeacons"
+        android:id="@+id/title"
+        android:layout_gravity="center_horizontal|top" />
+
+    <TableLayout
+        android:id="@+id/beacon_table"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/title"
+        android:layout_gravity="center_horizontal">
+
+        <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"></TableRow>
+
+        <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <TableRow
+                android:id="@+id/beacon_row"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_column="0">
+            </TableRow>
+        </TableRow>
+
+    </TableLayout>
+    
+</RelativeLayout>

@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/container"
-    tools:context=".MonitoringActivity"
+    tools:context=".RangingActivity"
     tools:ignore="MergeRootFrame" >
 
     <TextView

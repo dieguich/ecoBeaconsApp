@@ -18,6 +18,7 @@ import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.Gravity;
@@ -41,33 +42,32 @@ import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.client.DataProviderException;
 import org.altbeacon.beaconreference.R;
 
-import uk.ac.lincoln.lisc.vending.GridLayoutActivity;
+import uk.ac.lincoln.lisc.vending.VendingActivity;
 
 /**
  * 
  * @author dieguich
  */
-public class RangingActivity extends Activity implements BeaconConsumer,
+public class MainActivity extends Activity implements BeaconConsumer,
 		RangeNotifier {
 
 	protected static final String TAG = "RangingActivityMod";
 
 	private BeaconManager beaconManager;
 
-	Map<String, TableRow> rowMap = new HashMap<String, TableRow>();
-
-	private Context mContext;
+	//Map<String, TableRow> rowMap = new HashMap<String, TableRow>();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreateRanging");
 		super.onCreate(savedInstanceState);
+		
 		Intent intent = getIntent();
 		int notificationId = intent.getIntExtra("Notification", -1);
 		if (notificationId != -1) {
 			NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			manager.cancel(notificationId);
-			BeaconReferenceApplication.setBackgroundMode();
+			EcoBeaconsApplication.setBackgroundMode();
 			Intent startMain = new Intent(Intent.ACTION_MAIN);
 			startMain.addCategory(Intent.CATEGORY_HOME);
 			startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -79,10 +79,9 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 				.getBeaconParsers()
 				.add(new BeaconParser()
 						.setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-		setContentView(R.layout.activity_monitoring);
+		setContentView(R.layout.close_the_loop);
 		verifyBluetooth();
 		beaconManager.bind(this);
-		mContext = getApplicationContext();
 	}
 
 	@Override
@@ -91,14 +90,14 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 		super.onResume();
 		getWindow().setSoftInputMode(
 				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-		BeaconReferenceApplication.appResumed();
+		EcoBeaconsApplication.appResumed();
 	}
 
 	@Override
 	protected void onPause() {
 		Log.d(TAG, "onPauseRanging");
 		super.onPause();
-		BeaconReferenceApplication.appPaused();
+		EcoBeaconsApplication.appPaused();
 	}
 
 	@Override
@@ -114,9 +113,7 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 		beaconManager.setRangeNotifier(this);
 		try {
 			Log.d(TAG, "onBeaconService");
-			beaconManager
-					.startRangingBeaconsInRegion(BeaconReferenceApplication
-							.getRegion());
+			beaconManager.startRangingBeaconsInRegion(EcoBeaconsApplication.getRegion("Vending"));
 		} catch (RemoteException e) {
 		}
 	}
@@ -124,7 +121,7 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 	@Override
 	public void didRangeBeaconsInRegion(Collection<Beacon> beacons,
 			Region region) {
-		Log.d(TAG, String.valueOf(beacons.size()));
+		//Log.d(TAG, String.valueOf(beacons.size()));
 
 		if (beacons.size() > 0) {
 			for (Beacon myBeacon : beacons) {
@@ -141,7 +138,7 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 				// "I see an iBeacon: "+myBeacon.getId1()+"("+myBeacon.getId2()+" - "+myBeacon.getId3()+")"
 				// +myBeacon.getDistance()+" meters away");
 				// Log.d(TAG, String.valueOf(myBeacon.getId2().toInt()));
-				if (!BeaconReferenceApplication.isAppVisible()) {
+				if (!EcoBeaconsApplication.isAppVisible()) {
 					Log.d(TAG, "Background");
 					if (myBeacon.getId2().toInt() == 50000
 							&& myBeacon.getDistance() < 0.5) {
@@ -150,12 +147,12 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 								this);
 						getBigTextStyle(builder);
 						Intent resultIntent = new Intent(this,
-								GridLayoutActivity.class);
+								MainActivity.class);
 
 						// Intent startMain = new Intent(Intent.ACTION_MAIN);
 						// startMain.addCategory(Intent.CATEGORY_HOME);
 						Intent startMain = new Intent(this,
-								RangingActivity.class);
+								MainActivity.class);
 						startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 						startMain.putExtra("Notification", 2);
 						PendingIntent homePendingIntent = PendingIntent
@@ -172,7 +169,7 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 								.create(this);
 						// Adds the back stack for the Intent (but not the
 						// Intent itself)
-						stackBuilder.addParentStack(GridLayoutActivity.class);
+						stackBuilder.addParentStack(MainActivity.class);
 						// Adds the Intent that starts the Activity to the top
 						// of the stack
 						stackBuilder.addNextIntent(resultIntent);
@@ -193,11 +190,11 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 					}
 				} else {
 					String displayString = myBeacon.getDistance() + " "
-							+ myBeacon.getId2() + " " + myBeacon.getId3()
+							+ myBeacon.getId2() 
 							+ "\n";
 					Log.d(TAG, displayString);
 
-					// displayTableRow(myBeacon, displayString, false);
+					//displayTableRow(myBeacon, displayString, false);
 
 				}
 
@@ -221,7 +218,7 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 		int offsetY = 25;
 
 		Toast lToast = Toast.makeText(
-				(BeaconReferenceApplication) getBaseContext(), "you are "
+				(EcoBeaconsApplication) getBaseContext(), "you are "
 						+ distance + " far to the closest litter",
 				Toast.LENGTH_SHORT);
 		lToast.setGravity(Gravity.RIGHT | Gravity.TOP, offsetX, offsetY);
@@ -235,22 +232,23 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 	 */
 	private Notification getBigTextStyle(Notification.Builder builder) {
 
-		// long[] pattern = new long[]{1000,50,1000};
+		long[] pattern = new long[]{1000,50,1000};
 		// Uri defaultSound =
 		// RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
 		builder.setContentTitle("Reduced BigText title")
 				.setContentText("Reduced content").setContentInfo("Info")
-				.setSmallIcon(R.drawable.airdroid)
-				// .setVibrate(pattern)
+				.setSmallIcon(R.drawable.icon_loop_small_small)
+				//.setVibrate(pattern)
 				.setLights(Color.BLUE, 1, 0)
-				// .setSound(defaultSound)
+				//.setSound(defaultSound)
 				.setAutoCancel(true);
+				
 
 		return new Notification.BigTextStyle(builder)
-				.bigText("Come onnnnnn you can recycle man!! ")
-				.setBigContentTitle("Have you bought some stuff?")
-				.setSummaryText("How to cecycle properly").build();
+				.bigText("Either something to eat or drink? You can learn how and where to recycle with this App!!")
+				.setBigContentTitle("Have you bought something?")
+				.setSummaryText("Close the loop").build();
 	}
 
 	/**
@@ -302,6 +300,7 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 	 * @param displayString
 	 * @param updateIfExists
 	 */
+	/*
 	private void displayTableRow(final Beacon iBeacon,
 			final String displayString, final boolean updateIfExists) {
 		runOnUiThread(new Runnable() {
@@ -327,11 +326,9 @@ public class RangingActivity extends Activity implements BeaconConsumer,
 				TextView textView = new TextView(RangingActivity.this);
 				textView.setText(displayString);
 				tr.addView(textView);
-				BeaconReferenceApplication variableName = (BeaconReferenceApplication) RangingActivity.this
-						.getApplication();
-				variableName.toast("message");
+				
 
 			}
 		});
-	}
+	}*/
 }

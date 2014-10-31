@@ -17,10 +17,10 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:screenOrientation="landscape" 
-        android:name="uk.ac.lincoln.lisc.ecobeacons.BeaconReferenceApplication">
+        android:name="uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication">
         <activity
             android:launchMode="singleInstance" 
-            android:name="uk.ac.lincoln.lisc.ecobeacons.RangingActivity"
+            android:name="uk.ac.lincoln.lisc.ecobeacons.MainActivity"
             android:label="@string/app_name" 
             android:configChanges="orientation|keyboardHidden|keyboard">
             <intent-filter>
@@ -30,7 +30,7 @@
         </activity>
         
         <activity
-            android:name="uk.ac.lincoln.lisc.vending.GridLayoutActivity"
+            android:name="uk.ac.lincoln.lisc.vending.VendingActivity"
             android:label="@string/app_name" 
             android:configChanges="orientation|keyboardHidden|keyboard">
             <intent-filter>
@@ -39,7 +39,7 @@
             </intent-filter>
         </activity>
         
-        <activity android:name="uk.ac.lincoln.lisc.vending.ImageViewActivity" 
+        <activity android:name="uk.ac.lincoln.lisc.vending.NavigateToBinActivity" 
             android:configChanges="orientation|keyboardHidden|keyboard">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" >

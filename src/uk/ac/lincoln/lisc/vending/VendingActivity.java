@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
@@ -14,7 +15,9 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
@@ -28,24 +31,23 @@ import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beaconreference.R;
 
-import uk.ac.lincoln.lisc.ecobeacons.BeaconReferenceApplication;
-import uk.ac.lincoln.lisc.ecobeacons.RangingActivity;
+import uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication;
 
 //This application uses some deprecated methods. 
 //See UIViewPager for a more modern version of this application
 
-public class GridLayoutActivity extends Activity implements BeaconConsumer {
+public class VendingActivity extends Activity {
 
 	protected static final String TAG = "GridActivity";
 	protected static final String EXTRA_RES_ID = "POS";
+	
+	private GridView gridview;
 
-	private BeaconManager beaconManager;
 
 	private ArrayList<Integer> mThumbIdsFlowers = new ArrayList<Integer>(
 			Arrays.asList(R.drawable.cans, R.drawable.disposable_mugs,
 					R.drawable.sandwich_wedges, R.drawable.soda_bottles,
-					R.drawable.polystyrene_box, R.drawable.candy_wrappers,
-					R.drawable.other_stuff));
+					R.drawable.polystyrene_box, R.drawable.candy_wrappers));
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -57,7 +59,7 @@ public class GridLayoutActivity extends Activity implements BeaconConsumer {
 		// mId allows you to update the notification later on.
 		mNotificationManager.cancel(2);
 
-		GridView gridview = (GridView) findViewById(R.id.gridview);
+		gridview = (GridView) findViewById(R.id.gridview);
 
 		// Create a new ImageAdapter and set it as the Adapter for this GridView
 		gridview.setAdapter(new ImageAdapter(this, mThumbIdsFlowers));
@@ -68,8 +70,8 @@ public class GridLayoutActivity extends Activity implements BeaconConsumer {
 					int position, long id) {
 
 				// Create an Intent to start the ImageViewActivity
-				Intent intent = new Intent(GridLayoutActivity.this,
-						ImageViewActivity.class);
+				Intent intent = new Intent(VendingActivity.this,
+						NavigateToBinActivity.class);
 
 				// Add the ID of the thumbnail to display as an Intent Extra
 				intent.putExtra(EXTRA_RES_ID, (int) id);
@@ -78,101 +80,51 @@ public class GridLayoutActivity extends Activity implements BeaconConsumer {
 				startActivity(intent);
 			}
 		});
+		
+		ImageView image = (ImageView) findViewById(R.id.otherstuff);
+		image.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(VendingActivity.this,
+						NavigateToBinActivity.class);
 
-		// BeaconReferenceApplication.setRegion(BeaconReferenceApplicationRef,
-		// BeaconReferenceApplication.getRegion());
-		beaconManager = BeaconManager.getInstanceForApplication(this);
-		beaconManager
-				.getBeaconParsers()
-				.add(new BeaconParser()
-						.setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
-		beaconManager.bind(this);
+				// Add the ID of the thumbnail to display as an Intent Extra
+				AlertDialog alertDialog = new AlertDialog.Builder(VendingActivity.this).create();
+				alertDialog.setTitle("Nothing to recycle..");
+				alertDialog.setMessage("Just throw it to any litter");
+				alertDialog.setIcon(R.drawable.icon_loop_small);
+				alertDialog.setCanceledOnTouchOutside(true);
+				alertDialog.show();
+				
+			}
+		});
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		BeaconReferenceApplication.appResumed();
+		EcoBeaconsApplication.appResumed();
 	}
 
 	@Override
 	protected void onPause() {
 		Log.d(TAG, "onPauseRanging");
 		super.onPause();
-		BeaconReferenceApplication.appPaused();
+		EcoBeaconsApplication.appPaused();
 	}
 
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroyGrid");
 		super.onDestroy();
-		try {
-			// beaconManager.stopRangingBeaconsInRegion(region);
-			beaconManager.unbind(this);
-			Intent startMain = new Intent(this, RangingActivity.class);
+		/*try {
+			Intent startMain = new Intent(this, VendingActivity.class);
 			startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startMain.putExtra("Notification", 2);
 			this.startActivity(startMain);
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage());
-		}
-
-	}
-
-	@Override
-	public void onBeaconServiceConnect() {
-
-		Log.d(TAG, "onBeaconService");
-
-		beaconManager.setRangeNotifier(new RangeNotifier() {
-
-			@Override
-			public void didRangeBeaconsInRegion(Collection<Beacon> beacons,
-					Region region) {
-				Log.d(TAG, String.valueOf(beacons.size()));
-				if (beacons.iterator().hasNext()) {
-					Beacon lMyBeacon = beacons.iterator().next();
-					Log.d(TAG, String.valueOf(lMyBeacon.getId2()));
-					String ldistance = "You are "
-							+ round(lMyBeacon.getDistance(), 2)
-							+ "m far to the closest litter";
-					toastDistance(ldistance);
-
-				}
-			}
-
-			public double round(double value, int places) {
-				if (places < 0)
-					throw new IllegalArgumentException();
-
-				BigDecimal bd = new BigDecimal(value);
-				bd = bd.setScale(places, RoundingMode.HALF_UP);
-				return bd.doubleValue();
-			}
-
-			private void toastDistance(final String ldistance) {
-				runOnUiThread(new Runnable() {
-
-					@Override
-					public void run() {
-						Log.d(TAG, "Runnable");
-						BeaconReferenceApplication variableName = (BeaconReferenceApplication) GridLayoutActivity.this
-								.getApplication();
-						variableName.toast(ldistance);
-
-					}
-				});
-
-			}
-		});
-
-		try {
-			beaconManager
-					.startRangingBeaconsInRegion(BeaconReferenceApplication
-							.getRegion());
-
-		} catch (RemoteException e) {
-			Log.e(TAG, e.getMessage());
-		}
+		}*/
 	}
 }

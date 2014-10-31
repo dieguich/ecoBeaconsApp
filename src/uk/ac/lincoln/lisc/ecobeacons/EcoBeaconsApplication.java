@@ -1,6 +1,9 @@
 package uk.ac.lincoln.lisc.ecobeacons;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconManager;
@@ -10,7 +13,7 @@ import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.startup.BootstrapNotifier;
 import org.altbeacon.beacon.startup.RegionBootstrap;
 
-import uk.ac.lincoln.lisc.vending.GridLayoutActivity;
+import uk.ac.lincoln.lisc.vending.VendingActivity;
 
 import android.app.Activity;
 import android.app.Application;
@@ -24,28 +27,30 @@ import android.widget.Toast;
  * 
  * @author dieguich
  */
-public class BeaconReferenceApplication extends Application implements
+public class EcoBeaconsApplication extends Application implements
 		BootstrapNotifier {
 
-	private static final long mIntitialScanPeriod = 3000; // milliseconds
-	private static final long mIntitialScanFrequency = 4950; // milliseconds
-																// non-regular
-																// number
-	private static final long mInRegionScanPeriod = 3000; // milliseconds
-	private static final long mInRegionScanFrequency = 4950; // milliseconds
-																// non-regular
-																// number
+	private static final long mIntitialScanPeriod    = 2000; // milliseconds
+	private static final long mIntitialScanFrequency = 9200; // milliseconds
+																
+	private static final long mInRegionFirstTimeScanPeriod    = 2000; // milliseconds
+	private static final long mInRegionFirstTimeScanFrequency = 5200; // milliseconds
+	
+	private static final long mInRegionNearScanPeriod        = 1100; // milliseconds Less than 10meters
+	private static final long mInRegionNearTimeScanFrequency = 2200; // milliseconds  Less than 10meters
+																
 	private static final String mIBeaconVendingUUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
-
-	private static final String TAG = "BeaconReferenceApplicationMod";
-
+	private static final String TAG                 = "BeaconReferenceApplicationMod";
+	
+	private static final int mVendingMajorID = 50000;
+	
 	private static BeaconManager mBeaconManager;
-	private static Region mAllBeaconsRegion;
+	private static Region        mBeaconsRegion;
+	private static List<Region>  mRegionList;
 	@SuppressWarnings("unused")
 	private static RegionBootstrap mRegionBootstrap;
 
-	private static boolean mAppVisible; // To control if the App is in
-										// background or foreground
+	private static boolean mAppVisible; // To control if the App is in background or foreground
 
 	private int numRunningActivities = 0;
 
@@ -56,13 +61,11 @@ public class BeaconReferenceApplication extends Application implements
 
 			@Override
 			public void onActivityStopped(Activity activity) {
-				Log.i(TAG, "Activity Stopped: "
-						+ activity.getClass().getCanonicalName());
+				Log.i(TAG, "Activity Stopped: " + activity.getClass().getCanonicalName());
 				numRunningActivities--;
 
 				if (numRunningActivities == 0) {
-					Log.i(TAG,
-							"No running activities left, app has likely entered the background.");
+					Log.i(TAG, "No running activities left, app has likely entered the background.");
 				} else {
 					Log.i(TAG, numRunningActivities + " activities remaining");
 				}
@@ -109,24 +112,21 @@ public class BeaconReferenceApplication extends Application implements
 					// ((GridLayoutActivity)activity).unbindService((ServiceConnection)
 					// activity);
 					mRegionBootstrap.disable();
-					mAllBeaconsRegion = new Region("Recycling", Identifier
+					mBeaconsRegion = new Region("Recycling", Identifier
 							.parse(mIBeaconVendingUUID), Identifier
-							.fromInt(35451), null);
+							.fromInt(29218), null);
 					mRegionBootstrap = new RegionBootstrap(
-							(BeaconReferenceApplication) getApplicationContext(),
-							mAllBeaconsRegion);
+							(EcoBeaconsApplication) getApplicationContext(),
+							mBeaconsRegion);
 				}
 
 			}
 		});
-		mAllBeaconsRegion = new Region("Vending",
-				Identifier.parse(mIBeaconVendingUUID),
-				Identifier.fromInt(50000), null);
-		mRegionBootstrap = new RegionBootstrap(this, mAllBeaconsRegion);
-		mBeaconManager = BeaconManager.getInstanceForApplication(this);
+		setRegionList();
+		mRegionBootstrap = new RegionBootstrap(this, getRegion("Vending"));
+		mBeaconManager   = BeaconManager.getInstanceForApplication(this);
 		mBeaconManager.setBackgroundBetweenScanPeriod(mIntitialScanFrequency);
 		mBeaconManager.setBackgroundScanPeriod(mIntitialScanPeriod);
-
 	}
 
 	@Override
@@ -139,11 +139,8 @@ public class BeaconReferenceApplication extends Application implements
 	@Override
 	public void didEnterRegion(Region region) {
 		Log.d(TAG, "OnRegion: " + region.getUniqueId());
-		mBeaconManager.setBackgroundBetweenScanPeriod(mInRegionScanFrequency);
-		mBeaconManager.setBackgroundScanPeriod(mInRegionScanPeriod);
-		// Intent intent = new Intent(this, MonitoringActivity.class);
-		// intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		// this.startActivity(intent);
+		mBeaconManager.setBackgroundBetweenScanPeriod(mInRegionFirstTimeScanFrequency);
+		mBeaconManager.setBackgroundScanPeriod(mInRegionFirstTimeScanPeriod);
 	}
 
 	@Override
@@ -153,8 +150,14 @@ public class BeaconReferenceApplication extends Application implements
 		mBeaconManager.setBackgroundScanPeriod(mIntitialScanPeriod);
 	}
 
-	public static Region getRegion() {
-		return mAllBeaconsRegion;
+	public static Region getRegion(String regionName) {
+		Region lRegion = null;
+		for (Region iterable_element : mRegionList) {
+			if(iterable_element.getUniqueId().equalsIgnoreCase(regionName)){
+				lRegion = iterable_element;
+			}
+		}
+		return lRegion;
 	}
 
 	public static boolean isAppVisible() {
@@ -176,23 +179,26 @@ public class BeaconReferenceApplication extends Application implements
 		mBeaconManager.setBackgroundScanPeriod(mIntitialScanPeriod);
 	}
 
-	/**
-	 * @return the mIntitialscanfrequency
-	 */
-	public static long getIntitialscanfrequency() {
-		return mIntitialScanFrequency;
-	}
-
-	/**
-	 * @return the mIntitialscanperiod
-	 */
-	public static long getIntitialscanperiod() {
-		return mIntitialScanPeriod;
-	}
-
 	public void toast(String message) {
 		Toast.makeText(super.getApplicationContext(), message,
 				Toast.LENGTH_LONG).show();
+	}
+	
+	private void setRegionList() {
+		
+		//Identifier.parse(mIBeaconVendingUUID)
+		//mVendingidentifiers = new ArrayList<Identifier>();
+		//mVendingidentifiers.add(Identifier.parse(mIBeaconVendingUUID));
+		//mVendingidentifiers.add(Identifier.fromInt(mVendingMajorID));
+		//mVendingidentifiers.add(null);
+		//mBeaconsRegion   = new Region("Vending", mVendingidentifiers);
+		//mRegionBootstrapTest = new Region("Other", Identifier.parse(mIBeaconVendingUUID), 
+		//		Identifier.fromInt(35451), null);
+		mBeaconsRegion   = new Region("Vending", Identifier.parse(mIBeaconVendingUUID), 
+				Identifier.fromInt(mVendingMajorID), null);
+		mRegionList = new ArrayList<Region>();
+		mRegionList.add(mBeaconsRegion);
+		//lRegionList.add(mRegionBootstrapTest);
 	}
 
 }

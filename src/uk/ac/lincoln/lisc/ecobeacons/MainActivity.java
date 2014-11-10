@@ -1,34 +1,6 @@
 package uk.ac.lincoln.lisc.ecobeacons;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.RemoteException;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.EditText;
-import android.widget.TableLayout;
-import android.widget.TableRow;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -36,27 +8,60 @@ import org.altbeacon.beacon.BeaconData;
 import org.altbeacon.beacon.BeaconDataNotifier;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.MonitorNotifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.client.DataProviderException;
 import org.altbeacon.beaconreference.R;
 
-import uk.ac.lincoln.lisc.recycling.Litter;
+import uk.ac.lincoln.lisc.ecobeacons.HeadingsFragment.ListSelectionListener;
 import uk.ac.lincoln.lisc.vending.VendingActivity;
+import android.app.ActionBar;
+import android.app.ActionBar.Tab;
+import android.app.AlertDialog;
+import android.app.Fragment;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.os.RemoteException;
+import android.support.v4.app.FragmentActivity;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 /**
  * 
  * @author dieguich
  */
-public class MainActivity extends Activity implements BeaconConsumer,
-		RangeNotifier {
+public class MainActivity extends FragmentActivity implements BeaconConsumer,
+		RangeNotifier, ListSelectionListener{
 
-	protected static final String TAG = "RangingActivityMod";
+	protected static final String TAG     = "RangingActivityMod";
+	private static final int MATCH_PARENT = LinearLayout.LayoutParams.MATCH_PARENT;
+	
+	public static String[] mTipHeadingsArray;
+	public static String[] mTipsDescArray;
 
+	private static FragmentManager mFragmentManager;
+	private static FrameLayout mHeadingsFrameLayout, mTipsFrameLayout;
+	
+	private final static TipsFragment mTipsFragment = new TipsFragment();
+	
 	private BeaconManager beaconManager;
-
-	//Map<String, TableRow> rowMap = new HashMap<String, TableRow>();
+	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +87,141 @@ public class MainActivity extends Activity implements BeaconConsumer,
 						.setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
 		setContentView(R.layout.close_the_loop);
 		verifyBluetooth();
+		
+		mTipHeadingsArray = getResources().getStringArray(R.array.TipNumber);
+		mTipsDescArray    = getResources().getStringArray(R.array.Tips);
+		
+		// Get a reference to the FragmentManager
+		mFragmentManager     = getFragmentManager();
+		
+		mFragmentManager
+			.addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {
+				public void onBackStackChanged() {
+					Log.i(TAG, "BackStackChanged");
+					setLayout();
+				}
+		});
+		
+		mHeadingsFrameLayout = (FrameLayout) findViewById(R.id.fragment_container);
+		mTipsFrameLayout	 = (FrameLayout) findViewById(R.id.tips_fragment_container);
+		
+		final ActionBar tabBar = getActionBar();
+		tabBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		
+		if (savedInstanceState == null) {
+			FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+			fragmentTransaction.add(R.id.fragment_container, new PlaceholderFragment());
+			fragmentTransaction.addToBackStack("Frag1");
+			
+			// Commit the FragmentTransaction
+			fragmentTransaction.commit();
+			
+			// Force Android to execute the committed FragmentTransaction
+			mFragmentManager.executePendingTransactions();
+		}
+		
+		tabBar.addTab(tabBar.newTab().setText("Home").setTabListener(new TabListener(new HomeFragment())), true);
+		tabBar.addTab(tabBar.newTab().setText("Tips").setTabListener(new TabListener(new HeadingsFragment())));
 		beaconManager.bind(this);
+	}
+	
+	/**
+	 *  This class handles user interaction with the tabs
+	 * @author dieguich
+	 *
+	 */
+	public static class TabListener implements ActionBar.TabListener {
+		
+		private final Fragment mFragment;
+
+		public TabListener(Fragment fragment) {
+			mFragment = fragment;
+		}
+
+		@Override
+		public void onTabReselected(Tab tab, FragmentTransaction ft) {
+		}
+
+		// When a tab is selected, change the currently visible Fragment
+		@Override
+		public void onTabSelected(Tab tab, FragmentTransaction ft) {
+			Log.i(TAG, "onTabSelected called: " + tab.getPosition() + " " + tab.getTag());
+
+			if (mFragment != null) {
+				if(tab.getPosition() == 1) {
+					mTipsFrameLayout.setVisibility(View.VISIBLE);
+					if (mTipsFragment.isAdded()) {
+						Log.i(TAG, "Already Added");
+						// Make the TitleLayout take 1/3 of the layout's width
+						mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
+								MATCH_PARENT, 1f));
+						
+						// Make the QuoteLayout take 2/3's of the layout's width
+						mTipsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
+								MATCH_PARENT, 3f));
+					}
+				}
+				
+				ft.replace(R.id.fragment_container, mFragment);
+			}
+		}
+
+		// When a tab is unselected, remove the currently visible Fragment
+		@Override
+		public void onTabUnselected(Tab tab, FragmentTransaction ft) {
+			Log.i(TAG, "onTabUnselected called");
+
+			if (null != mFragment) {
+				
+				if(tab.getPosition() == 1) {
+					mTipsFrameLayout.setVisibility(View.INVISIBLE);
+					mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+							MATCH_PARENT, MATCH_PARENT));
+					
+				}
+				ft.remove(mFragment);
+			}
+		}
+	}
+
+	/**
+	 * A placeholder fragment containing a simple view.
+	 */
+	public static class PlaceholderFragment extends Fragment {
+
+		public PlaceholderFragment() {
+		}
+
+		@Override
+		public View onCreateView(LayoutInflater inflater, ViewGroup container,
+				Bundle savedInstanceState) {
+			View rootView = inflater.inflate(R.layout.fragment_main, container,
+					false);
+			return rootView;
+		}
+	}
+	
+	private void setLayout() {
+		
+		
+		// Determine whether the QuoteFragment has been added
+		if (!mTipsFragment.isAdded()) {
+			Log.i(TAG, "Not Added");
+			// Make the TitleFragment occupy the entire layout 
+			mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(
+					MATCH_PARENT, MATCH_PARENT));
+			mTipsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
+					MATCH_PARENT));
+		} else {
+			Log.i(TAG, "Already Added");
+			// Make the TitleLayout take 1/3 of the layout's width
+			mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
+					MATCH_PARENT, 1f));
+			
+			// Make the QuoteLayout take 2/3's of the layout's width
+			mTipsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
+					MATCH_PARENT, 3f));
+		}
 	}
 
 	@Override
@@ -290,5 +429,34 @@ public class MainActivity extends Activity implements BeaconConsumer,
 			builder.show();
 
 		}
+	}
+
+	@Override
+	public void onListSelection(int index) {
+		Log.i(TAG, "index selected: "+ index);
+		
+		if(!mTipsFragment.isAdded()) {		
+			Log.i(TAG, "starting transaction: "+ index);
+			// Start a new FragmentTransaction
+			FragmentTransaction fragmentTransaction = mFragmentManager
+					.beginTransaction();
+			
+			fragmentTransaction.add(R.id.tips_fragment_container, mTipsFragment);
+			// Add this FragmentTransaction to the backstack
+			fragmentTransaction.addToBackStack("Frag2");
+			
+			// Commit the FragmentTransaction
+			fragmentTransaction.commit();
+			
+			// Force Android to execute the committed FragmentTransaction
+			mFragmentManager.executePendingTransactions();
+			Log.i(TAG, "finished transaction: ");
+		}
+		if (mTipsFragment.getShownIndex() != index) {
+			Log.i(TAG, "show the text: "+ index);
+			// Tell the QuoteFragment to show the quote string at position index
+			mTipsFragment.showQuoteAtIndex(index);
+		}
+		
 	}
 }

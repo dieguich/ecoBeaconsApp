@@ -12,7 +12,8 @@
 	<FrameLayout
 		android:id="@+id/tips_fragment_container"
 		android:layout_width="0dp"
-		android:layout_height="match_parent">
+		android:layout_height="match_parent"
+		android:background="@color/black">
 	</FrameLayout>
 </LinearLayout>
 

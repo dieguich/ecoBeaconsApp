@@ -134,6 +134,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 		
 		private final Fragment mFragment;
 
+
 		public TabListener(Fragment fragment) {
 			mFragment = fragment;
 		}
@@ -155,6 +156,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 						// Make the TitleLayout take 1/3 of the layout's width
 						mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
 								MATCH_PARENT, 1f));
+						mHeadingsFrameLayout.setBackgroundColor(Color.parseColor("#518c05"));
 						
 						// Make the QuoteLayout take 2/3's of the layout's width
 						mTipsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
@@ -177,6 +179,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 					mTipsFrameLayout.setVisibility(View.INVISIBLE);
 					mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(
 							MATCH_PARENT, MATCH_PARENT));
+					mHeadingsFrameLayout.setBackgroundColor(Color.WHITE);
 					
 				}
 				ft.remove(mFragment);
@@ -217,6 +220,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 			// Make the TitleLayout take 1/3 of the layout's width
 			mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
 					MATCH_PARENT, 1f));
+			mHeadingsFrameLayout.setBackgroundColor(Color.parseColor("#518c05"));
 			
 			// Make the QuoteLayout take 2/3's of the layout's width
 			mTipsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,

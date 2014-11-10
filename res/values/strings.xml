@@ -9,11 +9,17 @@
         <item>Tip 1: Recycle</item>
         <item>Tip 2: Reuse</item>
         <item>Tip 3: Reduce</item>
+        <item>Tip 4: Health</item>
+        <item>Tip 5: Mobility</item>
+        <item>Tip 6: Wellbeing</item>
     </string-array>
     <string-array name="Tips">
         <item>Plastic bottle caps are usually recyclable along with the bottle! Check with your  local solid waste and recycling office to be sure, but many recycling programs accept bottle caps.</item>
         <item>Half is better than none! Although you can’t recycle your whole pizza box, you can tear off and recycle the top half, as long as it’s grease-free. As always, check with your local solid waste and recycling office to be sure. Keep this tip in mind if you’re picking up a pizza or ordering in this weekend!</item>
         <item> Reduce and reuse first to shrink your environmental footprint! Reduce your unwanted mail by unsubscribing via CatalogChoice.org</item>
+        <item>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam nisi dui, tempus a commodo eu, ullamcorper ac nisi. Donec tincidunt dignissim diam, venenatis venenatis est elementum eget. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Ut imperdiet augue nec leo consequat blandit.</item>
+        <item>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam nisi dui, tempus a commodo eu, ullamcorper ac nisi. Donec tincidunt dignissim diam, venenatis venenatis est elementum eget. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Ut imperdiet augue nec leo consequat blandit.</item>
+        <item>nteger lacinia consectetur dictum. Proin elementum dapibus mi, at interdum ipsum tincidunt id. Nunc tempor elit libero, vestibulum mattis lacus venenatis vel. Aenean sagittis enim id ultrices fringilla. Aenean vitae augue tristique, blandit mauris eget, sodales est.</item>
     </string-array>
 
 </resources>

@@ -42,6 +42,7 @@ import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.client.DataProviderException;
 import org.altbeacon.beaconreference.R;
 
+import uk.ac.lincoln.lisc.recycling.Litter;
 import uk.ac.lincoln.lisc.vending.VendingActivity;
 
 /**
@@ -147,10 +148,9 @@ public class MainActivity extends Activity implements BeaconConsumer,
 								this);
 						getBigTextStyle(builder);
 						Intent resultIntent = new Intent(this,
-								MainActivity.class);
+								VendingActivity.class);
 
-						// Intent startMain = new Intent(Intent.ACTION_MAIN);
-						// startMain.addCategory(Intent.CATEGORY_HOME);
+						
 						Intent startMain = new Intent(this,
 								MainActivity.class);
 						startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -291,44 +291,4 @@ public class MainActivity extends Activity implements BeaconConsumer,
 
 		}
 	}
-
-	/**
-	 * Displays a Table where the iBeacons in the proximity are shown as well as
-	 * their relative distance to the Bluetooth-enabled phone.
-	 * 
-	 * @param iBeacon
-	 * @param displayString
-	 * @param updateIfExists
-	 */
-	/*
-	private void displayTableRow(final Beacon iBeacon,
-			final String displayString, final boolean updateIfExists) {
-		runOnUiThread(new Runnable() {
-			@Override
-			public void run() {
-				TableLayout table = (TableLayout) findViewById(R.id.beacon_table);
-				String key = iBeacon.getDistance() + "-" + iBeacon.getId2()
-						+ "-" + iBeacon.getId3();
-				TableRow tr = (TableRow) rowMap.get(key);
-				if (tr == null) {
-					tr = new TableRow(RangingActivity.this);
-					tr.setLayoutParams(new TableRow.LayoutParams(
-							TableRow.LayoutParams.WRAP_CONTENT,
-							TableRow.LayoutParams.WRAP_CONTENT));
-					rowMap.put(key, tr);
-					table.addView(tr);
-				} else {
-					if (updateIfExists == false) {
-						return;
-					}
-				}
-				tr.removeAllViews();
-				TextView textView = new TextView(RangingActivity.this);
-				textView.setText(displayString);
-				tr.addView(textView);
-				
-
-			}
-		});
-	}*/
 }

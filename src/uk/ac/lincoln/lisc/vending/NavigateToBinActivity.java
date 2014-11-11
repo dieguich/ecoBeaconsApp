@@ -14,7 +14,6 @@ import org.altbeacon.beaconreference.R;
 
 
 import uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication;
-import uk.ac.lincoln.lisc.ecobeacons.MainActivity;
 import uk.ac.lincoln.lisc.recycling.Litter;
 
 import android.app.Activity;
@@ -23,6 +22,18 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Bitmap.Config;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
@@ -62,8 +73,14 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 		}
 		else {
 			mIdValue = intent.getIntExtra(VendingActivity.EXTRA_RES_ID, 0);
-			Log.d(TAG,  String.valueOf(mIdValue));
-			imageView.setImageResource(mIdValue);
+			TypedArray imgs = getResources().obtainTypedArray(R.array.image_ids);
+			Bitmap bitmapRound = getRoundedCornerBitmap(imgs.getDrawable(mIdValue), false);
+			
+			imageView.setImageBitmap(bitmapRound);
+			imageView.setImageAlpha(150);
+			BitmapDrawable bitDraw = new BitmapDrawable(getResources(), 
+					BitmapFactory.decodeResource(getResources(), R.drawable.blue_bin));
+			imageView.setBackground(bitDraw);
 		}
 		
 
@@ -199,5 +216,44 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 						Toast.LENGTH_LONG).show();
 			}
 		});*/
+	
+	public static Bitmap getRoundedCornerBitmap( Drawable drawable, boolean square) {
+	     int width = 0;
+	     int height = 0;
+	     
+	     Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap() ;
+	     
+	     if(square){
+	      if(bitmap.getWidth() < bitmap.getHeight()){
+	       width = bitmap.getWidth();
+	       height = bitmap.getWidth();
+	      } else {
+	       width = bitmap.getHeight();
+	          height = bitmap.getHeight();
+	      }
+	     } else {
+	      height = bitmap.getHeight();
+	      width = bitmap.getWidth();
+	     }
+	     
+	        Bitmap output = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+	        Canvas canvas = new Canvas(output);
+
+	        final int color = 0xff424242;
+	        final Paint paint = new Paint();
+	        final Rect rect = new Rect(0, 0, width, height);
+	        final RectF rectF = new RectF(rect);
+	        final float roundPx = 90; 
+
+	        paint.setAntiAlias(true);
+	        canvas.drawARGB(0, 0, 0, 0);
+	        paint.setColor(color);
+	        canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
+
+	        paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
+	        canvas.drawBitmap(bitmap, rect, rect, paint);
+
+	        return output;
+	}
 	
 }

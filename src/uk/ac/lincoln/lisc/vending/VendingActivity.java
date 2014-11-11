@@ -1,37 +1,27 @@
 package uk.ac.lincoln.lisc.vending;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 
+import org.altbeacon.beaconreference.R;
+
+import uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
-import android.widget.ImageView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
-
-import org.altbeacon.beacon.Beacon;
-import org.altbeacon.beacon.BeaconConsumer;
-import org.altbeacon.beacon.BeaconManager;
-import org.altbeacon.beacon.BeaconParser;
-import org.altbeacon.beacon.Identifier;
-import org.altbeacon.beacon.RangeNotifier;
-import org.altbeacon.beacon.Region;
-import org.altbeacon.beaconreference.R;
-
-import uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication;
+import android.widget.ImageView;
 
 //This application uses some deprecated methods. 
 //See UIViewPager for a more modern version of this application
@@ -41,8 +31,8 @@ public class VendingActivity extends Activity {
 	protected static final String TAG = "GridActivity";
 	protected static final String EXTRA_RES_ID = "POS";
 	
-	private GridView gridview;
-
+	private GridView gridView;
+	private GridViewAdapter customGridAdapter;
 
 	private ArrayList<Integer> mThumbIdsFlowers = new ArrayList<Integer>(
 			Arrays.asList(R.drawable.cans, R.drawable.disposable_mugs,
@@ -59,13 +49,14 @@ public class VendingActivity extends Activity {
 		// mId allows you to update the notification later on.
 		mNotificationManager.cancel(2);
 
-		gridview = (GridView) findViewById(R.id.gridview);
+		gridView = (GridView) findViewById(R.id.gridView);
 
 		// Create a new ImageAdapter and set it as the Adapter for this GridView
-		gridview.setAdapter(new ImageAdapter(this, mThumbIdsFlowers));
+		customGridAdapter = new GridViewAdapter(this, R.layout.row_grid, getData());
+		gridView.setAdapter(customGridAdapter);
 
 		// Set an setOnItemClickListener on the GridView
-		gridview.setOnItemClickListener(new OnItemClickListener() {
+		gridView.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View v,
 					int position, long id) {
 
@@ -126,5 +117,20 @@ public class VendingActivity extends Activity {
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage());
 		}*/
+	}
+	
+	private ArrayList<ImageItem> getData() {
+		final ArrayList<ImageItem> imageItems = new ArrayList<ImageItem>();
+		final String[] lImageCaptions = getResources().getStringArray(R.array.image_captions);
+		// retrieve String drawable array
+		TypedArray imgs = getResources().obtainTypedArray(R.array.image_ids);
+		for (int i = 0; i < imgs.length(); i++) {
+			Bitmap bitmap = BitmapFactory.decodeResource(this.getResources(),
+					imgs.getResourceId(i, -1));
+			imageItems.add(new ImageItem(bitmap, lImageCaptions[i]));
+		}
+
+		return imageItems;
+
 	}
 }

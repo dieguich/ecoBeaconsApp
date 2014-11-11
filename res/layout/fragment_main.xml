@@ -18,4 +18,16 @@
         android:contentDescription="@string/icon">
     </ImageView>
 
+     <TextView
+         android:id="@+id/textView1"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:layout_alignLeft="@+id/home_image"
+         android:layout_alignBottom="@+id/home_image"
+         android:layout_marginBottom="15dp"
+         android:layout_marginLeft="35dp"
+         android:text="@string/theAppsHelps"
+         android:textColor="@color/blue"
+         android:textAppearance="?android:attr/textAppearanceLarge" />
+
 </RelativeLayout>

@@ -5,6 +5,8 @@
     <string name="action_settings">Settings</string>
     <string name="o_stuff">Other stuff</string>
     <string name="icon">Close the loop</string>
+    <string name="theAppsHelps">Tha App that helps you to enhance your recycling habits in the Atrium</string>
+    
     <string-array name="TipNumber">
         <item>Tip 1: Recycle</item>
         <item>Tip 2: Reuse</item>

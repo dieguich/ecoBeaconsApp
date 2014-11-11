@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="image_ids">
+        <item>@drawable/cans</item>
+        <item>@drawable/disposable_mugs</item>
+        <item>@drawable/sandwich_wedges</item>
+        <item>@drawable/soda_bottles</item>
+        <item>@drawable/polystyrene_box</item>
+        <item>@drawable/candy_wrappers</item>
+    </string-array>
+    
+    <string-array name="image_captions">
+        <item>Cans</item>
+        <item>Coffee mugs</item>
+        <item>plastic wedges</item>
+        <item>soda bottles</item>
+        <item>food boxes</item>
+        <item>candy wrappers</item>
+    </string-array>
+
+</resources>

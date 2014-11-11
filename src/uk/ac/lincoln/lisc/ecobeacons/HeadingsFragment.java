@@ -70,5 +70,6 @@ public class HeadingsFragment extends ListFragment {
 
 		// Set the list choice mode to allow only one selection at a time
 		getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+		getListView().setDividerHeight(5);
 	}
 }

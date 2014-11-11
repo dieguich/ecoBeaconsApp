@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
@@ -77,8 +78,8 @@ public class VendingActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				Intent intent = new Intent(VendingActivity.this,
-						NavigateToBinActivity.class);
+				//Intent intent = new Intent(VendingActivity.this,
+				//		NavigateToBinActivity.class);
 
 				// Add the ID of the thumbnail to display as an Intent Extra
 				AlertDialog alertDialog = new AlertDialog.Builder(VendingActivity.this).create();
@@ -86,6 +87,14 @@ public class VendingActivity extends Activity {
 				alertDialog.setMessage("Just throw it to any litter");
 				alertDialog.setIcon(R.drawable.icon_loop_small);
 				alertDialog.setCanceledOnTouchOutside(true);
+				alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+					
+					@Override
+					public void onCancel(DialogInterface dialog) {
+						VendingActivity.this.finish();
+						
+					}
+				});
 				alertDialog.show();
 				
 			}

@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<uk.ac.lincoln.lisc.ecobeacons.CustomTextView xmlns:android="http://schemas.android.com/apk/res/android"
+	   android:layout_width="match_parent"
+	   android:layout_height="match_parent"
+	   android:background="?android:attr/activatedBackgroundIndicator"
+	   android:textSize="25sp"
+	   android:textColor="#7FBA00">
+</uk.ac.lincoln.lisc.ecobeacons.CustomTextView>
+
+<!-- <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/activatedBackgroundIndicator"
     android:padding="5dip"
     android:textSize="25sp" >
 
-</TextView>
+
+</TextView>      -->

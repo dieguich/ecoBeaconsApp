@@ -156,7 +156,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 						// Make the TitleLayout take 1/3 of the layout's width
 						mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
 								MATCH_PARENT, 1f));
-						mHeadingsFrameLayout.setBackgroundColor(Color.parseColor("#518c05"));
+						mHeadingsFrameLayout.setBackgroundColor(Color.parseColor("#2e332e"));
 						
 						// Make the QuoteLayout take 2/3's of the layout's width
 						mTipsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
@@ -220,7 +220,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 			// Make the TitleLayout take 1/3 of the layout's width
 			mHeadingsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,
 					MATCH_PARENT, 1f));
-			mHeadingsFrameLayout.setBackgroundColor(Color.parseColor("#518c05"));
+			mHeadingsFrameLayout.setBackgroundColor(Color.parseColor("#2e332e"));
 			
 			// Make the QuoteLayout take 2/3's of the layout's width
 			mTipsFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(0,

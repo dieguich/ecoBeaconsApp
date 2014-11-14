@@ -29,7 +29,7 @@ import android.widget.ImageView;
 
 public class VendingActivity extends Activity {
 
-	protected static final String TAG = "GridActivity";
+	protected static final String TAG = "VendingActivity";
 	protected static final String EXTRA_RES_ID = "POS";
 	
 	private GridView gridView;

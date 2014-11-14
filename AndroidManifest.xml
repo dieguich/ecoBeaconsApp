@@ -5,7 +5,7 @@
 
     <uses-sdk
         android:minSdkVersion="17"
-        android:targetSdkVersion="19" />
+        android:targetSdkVersion="20" />
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -16,13 +16,14 @@
         android:icon="@drawable/icon_loop"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:screenOrientation="landscape" 
-        android:name="uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication">
+        android:name="uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication"
+        android:alwaysRetainTaskState="true">
         <activity
             android:launchMode="singleInstance" 
             android:name="uk.ac.lincoln.lisc.ecobeacons.MainActivity"
             android:label="@string/app_name" 
-            android:configChanges="orientation|keyboardHidden|keyboard">
+            android:screenOrientation="portrait"
+            android:alwaysRetainTaskState="true">
             <intent-filter>
 				<action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -41,11 +42,12 @@
         </activity>
         
         <activity android:name="uk.ac.lincoln.lisc.vending.NavigateToBinActivity" 
-            android:configChanges="orientation|keyboardHidden|keyboard">
+            android:label="@string/app_name" 
+            android:screenOrientation="portrait"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" >
                 </action>
-
                 <data
                     android:mimeType="image/*"
                     android:scheme="android.resource" >
@@ -55,6 +57,21 @@
                 </category>
             </intent-filter>
         </activity>
+        <activity android:name="uk.ac.lincoln.lisc.recycling.LitterActivity" 
+            android:label="@string/app_name" 
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" >
+                </action>
+            </intent-filter>
+        </activity>
+        <receiver
+		    android:name="uk.ac.lincoln.lisc.ecobeacons.OnNoItemSelected"
+		    android:exported="false" >
+		    <intent-filter>
+		        <action android:name="ecobeacons.NO_SELECTION" />
+		    </intent-filter>
+		</receiver>
     </application>
     
 </manifest>

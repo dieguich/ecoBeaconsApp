@@ -46,6 +46,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.RemoteException;
+import android.os.Vibrator;
 import android.print.PrintAttributes.Margins;
 import android.support.v4.view.MotionEventCompat;
 import android.util.DisplayMetrics;
@@ -82,12 +83,15 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 	private int mCounts            = 0;
 	private Boolean mIsReadyToSCAN =  false;
 	private Beacon mMyBinBeacon;
+	private int mWaitCounter       = 0;
+	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "OnCreate");
+		
 
 		// Get the Intent used to start this Activity
 		Intent intent = getIntent();
@@ -109,6 +113,7 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 				mIdValue = lImageID;
 				Log.d(TAG,  String.valueOf(mIdValue));
 			}
+			mWaitCounter = 4;
 			mBitmapRound = getRoundedCornerBitmap(getResources().getDrawable(R.drawable.concentric), true);
 			mImageView.setImageBitmap(mBitmapRound);
 			mImageView.setImageAlpha(150);
@@ -118,7 +123,8 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 			mImageView.setBackground(bitDraw);
 			AnimationDrawable frameAnimation = (AnimationDrawable) mImageView.getDrawable();
 			frameAnimation.start();
-			setContentView(mImageView);  
+			setContentView(mImageView);
+			
 		}
 		else { //TODO: Something that onDestroy can check if mIdValue > 3
 			
@@ -165,8 +171,8 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 					
 					@Override
 					public void onFinish() {
-						if(mStuffBought.equals("WEDGE")) {
-							mStuffBought = "SANDWICH";
+						if(mStuffBought.equals("PAPER")) {
+							mStuffBought = "FOOD";
 						}
 						mTextView.setText("Touch the screen, keep calm and enjoy your "+ mStuffBought + ".");
 						//TODO: TOAST "You will be notified when close to a recycle bin"
@@ -219,16 +225,16 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 			mStuffBought      = "COFFEE";
 			break;
 		case 2:
-			lBinToDisplay     = R.drawable.red_bin;
-			mBullseyeNotiIcon = R.drawable.bullseye_icon_red;
-			mBinColour        = "RED";
-			mStuffBought      = "WEDGE";
+			lBinToDisplay     = R.drawable.blue_bin;
+			mBullseyeNotiIcon = R.drawable.bullseye_icon_blue;
+			mBinColour        = "BLUE";
+			mStuffBought      = "PAPER";
 			break;
 		case 3:
-			lBinToDisplay     = R.drawable.red_bin;
-			mBullseyeNotiIcon = R.drawable.bullseye_icon_red;
-			mBinColour        = "RED";
-			mStuffBought      = "SODA";
+			lBinToDisplay     = R.drawable.green_bin;
+			mBullseyeNotiIcon = R.drawable.bullseye_icon_green;
+			mBinColour        = "GREEN";
+			mStuffBought      = "BOTTLE";
 			break;
 		case 4:
 			lBinToDisplay     = R.drawable.no_recyclable;
@@ -286,7 +292,6 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 		.setSummaryText("Close the loop!").build();
 	}
 
-
 	@Override
 	public void onDestroy() {
 		Log.d(TAG, "onDestroy");
@@ -308,7 +313,9 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 			public void didRangeBeaconsInRegion(Collection<Beacon> beacons,
 					Region region) {
 				Log.d(TAG, "Beacons detected: " + String.valueOf(beacons.size()));
-				if(mBullseyeNotiIcon != 0 && mIsReadyToSCAN && beacons.size() > 0) {
+				mWaitCounter++;
+				toastDistance("Counter: " + mWaitCounter);
+				if(mBullseyeNotiIcon != 0 && mIsReadyToSCAN && beacons.size() > 0 && mWaitCounter > 4) {
 					Beacon lAuxBeacon;
 					double lClosestDistance = 0.0;
 					for (Beacon myBeacon : beacons) {
@@ -325,12 +332,38 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 						}
 					}
 						
-					String ldistance = "You are "
+					String lDistance = "You are around"
 							+ round(lClosestDistance, 2)
-							+ "m far to the closest litter ( "+ mMyBinBeacon.getId2() + " )";
-					toastDistance(ldistance);
+							+ "m far to the closest litter ( "+ mMyBinBeacon.getId3() + " )";
+					if(EcoBeaconsApplication.getCurrentActivity() != null) {
+						toastDistance(lDistance);
+					}
+					Vibrator mVibratorPattern;
+					mVibratorPattern = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
+					long[] lPattern; 
+					if(lClosestDistance < 5 ) {
+						if (lClosestDistance > 4) {
+							lPattern = new long[] {0, 500, 100};
+						}
+						else if(lClosestDistance > 3) {
+							EcoBeaconsApplication.setNearMode();
+							lPattern = new long[] {0, 500, 300, 500, 100};
+						}
+						else if(lClosestDistance >= 2) {
+							
+							lPattern = new long[] {0, 400, 300, 400, 300, 400, 100};
+						}
+						else {
+							lPattern = new long[] {0, 200, 200, 200, 200, 200, 200, 200, 100};
+						}
+						mVibratorPattern.vibrate(lPattern, -1);
+					}
+					
+						
 					if (mMyBinBeacon.getId2().toInt() == mRecyclingMajorID
-							&& lClosestDistance < 1.5) {
+							&& lClosestDistance < 1) {
+						//long[] lPattern = {0, 500, 300, 500, 300, 500, 300, 500, 100};
+						//mVibratorPattern.vibrate(lPattern, -1);
 						mCounts++;
 						Log.d(TAG, "mCounts: " + mCounts);
 						//Log.d(TAG, EcoBeaconsApplication.getCurrentActivity());

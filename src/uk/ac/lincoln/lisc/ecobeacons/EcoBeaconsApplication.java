@@ -32,14 +32,14 @@ import android.widget.Toast;
 public class EcoBeaconsApplication extends Application implements
 		BootstrapNotifier {
 
-	private static final long mIntitialScanPeriod    = 1100; // milliseconds
-	private static final long mIntitialScanFrequency = 3000; // milliseconds
+	private static final long mIntitialScanPeriod    = 2200; // milliseconds
+	private static final long mIntitialScanFrequency = 3300; // milliseconds
 																
-	private static final long mInRegionFirstTimeScanPeriod    = 1100; // milliseconds
-	private static final long mInRegionFirstTimeScanFrequency = 3000; // milliseconds
+	private static final long mInRegionFirstTimeScanPeriod    = 4400; // milliseconds
+	private static final long mInRegionFirstTimeScanFrequency = 500; // milliseconds
 	
 	private static final long mInRegionNearScanPeriod        = 1100; // milliseconds Less than 10meters
-	private static final long mInRegionNearTimeScanFrequency = 3000; // milliseconds  Less than 10meters
+	private static final long mInRegionNearTimeScanFrequency = 100; // milliseconds  Less than 10meters
 																
 	//private static final String mIBeaconVendingUUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
 	private static final String mIBeaconVendingUUID   = "A7AE2EB7-1F00-4168-B99B-A749BAC1CA64";
@@ -50,7 +50,10 @@ public class EcoBeaconsApplication extends Application implements
 	
 	//private static final int mVendingMajorID = 50000;
 	private static final int mVendingMajorID   = 111;
+	private static final int mVendingMinorID   = 4;
+	
 	private static final int mRecyclingMajorID = 999;
+	private static final int mRecyclingMinorID = 2;
 	
 	
 	private static BeaconManager mBeaconManager;
@@ -136,7 +139,8 @@ public class EcoBeaconsApplication extends Application implements
 		setRegionList();
 		mRegionBootstrap = new RegionBootstrap(this, getRegion(mVendingRegName));
 		mBeaconManager   = BeaconManager.getInstanceForApplication(this);
-		setRealBackgroundMode();
+		setRegionMode();
+		//setRealBackgroundMode();
 	}
 
 	@Override
@@ -158,7 +162,7 @@ public class EcoBeaconsApplication extends Application implements
 				
 				@Override
 				public void run() {
-					toast("On Region " + region.getUniqueId());
+					toast("READY");
 				}
 			});
 		}
@@ -168,7 +172,7 @@ public class EcoBeaconsApplication extends Application implements
 	public void didExitRegion(final Region region) {
 		Log.d(TAG, "ExitRegion");
 		if(region.getUniqueId().contains("Vending")) {
-			setBackgroundMode();
+			//setBackgroundMode();
 		}
 		if(mCurrentAct != null) {
 			mCurrentAct.runOnUiThread(new Runnable() {
@@ -182,7 +186,13 @@ public class EcoBeaconsApplication extends Application implements
 		}
 	}
 	public static String getCurrentActivity() {
-		return mCurrentAct.getClass().getName();
+		if(mCurrentAct != null) {
+			return mCurrentAct.getClass().getName();
+		}
+		else {
+			return null;
+		}
+		
 	}
 
 	/**
@@ -201,19 +211,6 @@ public class EcoBeaconsApplication extends Application implements
 		return lRegion;
 	}
 
-	/*public static boolean isAppVisible() {
-		return mAppVisible;
-	}
-
-	public static void appResumed() {
-		Log.d(TAG, "App RESUMED");
-		mAppVisible = true;
-	}
-
-	public static void appPaused() {
-		Log.d(TAG, "App PAUSED");
-		mAppVisible = false;
-	}*/
 
 	public static void setBackgroundMode() {
 		Log.d(TAG, "BackgroundMODE");
@@ -286,7 +283,7 @@ public class EcoBeaconsApplication extends Application implements
 	 */
 	private void setRegionList() {
 		mBeaconsRegion   = new Region(mVendingRegName, Identifier.parse(mIBeaconVendingUUID), 
-				Identifier.fromInt(mVendingMajorID), null);
+				Identifier.fromInt(mVendingMajorID), Identifier.fromInt(mVendingMinorID));
 		mRegionList = new ArrayList<Region>();
 		mRegionList.add(mBeaconsRegion);
 		mRegionList.add(new Region(mRecyclingRegName, Identifier.parse(mIBeaconRecyclingUUID),

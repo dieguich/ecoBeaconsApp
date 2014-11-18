@@ -37,7 +37,7 @@ public class VendingActivity extends Activity {
 
 	private ArrayList<Integer> mThumbIdsFlowers = new ArrayList<Integer>(
 			Arrays.asList(R.drawable.cans, R.drawable.disposable_mugs,
-					R.drawable.sandwich_wedges, R.drawable.soda_bottles,
+					R.drawable.paper_wrappers, R.drawable.glass_bottles,
 					R.drawable.polystyrene_box, R.drawable.candy_wrappers));
 
 	@Override

@@ -5,13 +5,10 @@ import java.util.HashMap;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
-import org.altbeacon.beacon.BeaconData;
-import org.altbeacon.beacon.BeaconDataNotifier;
 import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
-import org.altbeacon.beacon.client.DataProviderException;
 import org.altbeacon.beaconreference.R;
 
 import uk.ac.lincoln.lisc.ecobeacons.HeadingsFragment.ListSelectionListener;
@@ -30,12 +27,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.os.Vibrator;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,7 +62,8 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 	private BeaconManager mBeaconManager;
 	private final String mVendingRegion = "Vending";
 	private final int mVendingMajorID   = 111;
-	private Boolean mIsFirstTimeInFive  = true;
+	private Boolean mIsFirstTimeInFive       = true;
+	private Boolean mIsNotificationTriggered = false;
 	
 	private final static TipsFragment mTipsFragment    = new TipsFragment();
 	private HashMap<Beacon, Integer> mMyBeaconsInFivem = new HashMap<Beacon, Integer>();
@@ -116,6 +116,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 		tabBar.addTab(tabBar.newTab().setText("Home").setTabListener(new TabListener(new HomeFragment())), true);
 		tabBar.addTab(tabBar.newTab().setText("Why reclycling?").setTabListener(new TabListener(new HeadingsFragment())));
 		mBeaconManager.bind(this);
+		
 	}
 	
 	/**
@@ -253,23 +254,30 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 
 	@Override
 	public void didRangeBeaconsInRegion(Collection<Beacon> beacons, Region region) {
-		//Log.d(TAG, String.valueOf(beacons.size()));
-
+		Log.d(TAG, String.valueOf(beacons.size()));
+		//toast(String.valueOf(beacons.size()));
 		if (beacons.size() > 0) {
-			for (Beacon myBeacon : beacons) {
 			
-				if(myBeacon.getId2().toInt() == mVendingMajorID && getEasiDistance(myBeacon.getTxPower(), myBeacon.getRssi()) < 2 ) { 
+			for (Beacon myBeacon : beacons) {
+				
+				double lDistanceFromBeacon = getEasiDistance(myBeacon.getTxPower(), myBeacon.getRssi()) ;
+				Log.d(TAG, "Distance: " + lDistanceFromBeacon + " ID: " + myBeacon.getId2().toInt());
+				String lToToast = "Beacon: (" + myBeacon.getId2() + ", " + myBeacon.getId3() + ")" + ". Distance: " + 
+						getEasiDistance(myBeacon.getTxPower(), myBeacon.getRssi()) + "m  far";
+				Log.d(TAG, lToToast);
+				//toast(lToToast);
+				if(myBeacon.getId2().toInt() == mVendingMajorID && lDistanceFromBeacon < 1.6) {
 					if(mIsFirstTimeInFive) {
 						
-						if(EcoBeaconsApplication.getCurrentActivity().contains("Vending")) {
-							try {
-								Log.d(TAG, "Stop Ranging");
-								mBeaconManager.stopRangingBeaconsInRegion(EcoBeaconsApplication.getRegion(mVendingRegion));
-								mBeaconManager.unbind(this);
-							} catch (RemoteException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
+						if(EcoBeaconsApplication.getCurrentActivity() != null && EcoBeaconsApplication.getCurrentActivity().contains("Vending")) {
+								try {
+									Log.d(TAG, "Stop Ranging");
+									mBeaconManager.stopRangingBeaconsInRegion(EcoBeaconsApplication.getRegion(mVendingRegion));
+									mBeaconManager.unbind(this);
+								} catch (RemoteException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}		
 						}else{
 							Log.d(TAG, "FIRST TIME in FIVE");
 							mIsFirstTimeInFive = !mIsFirstTimeInFive;
@@ -279,20 +287,18 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 						if(mMyBeaconsInFivem.containsKey(myBeacon)) {
 							int lCurrentTimesInFive = mMyBeaconsInFivem.get(myBeacon);
 							lCurrentTimesInFive++;
-							String lToToast = "Beacon: (" + myBeacon.getId2() + ", " + myBeacon.getId3() + ")" + 
-									" view "+ lCurrentTimesInFive + " times. TxPower: " + myBeacon.getTxPower() + 
-									" RSSI: " + myBeacon.getRssi() + " and distance " + getEasiDistance(myBeacon.getTxPower(), myBeacon.getRssi());
-							Log.d(TAG, lToToast);
-							toast(lToToast);
+							
 							if (lCurrentTimesInFive == 2 && EcoBeaconsApplication.getRangingMode() == 1) {
 								EcoBeaconsApplication.setRangingMode(2);
-								EcoBeaconsApplication.setNearMode();
+								//EcoBeaconsApplication.setNearMode();
 							}
-							if(lCurrentTimesInFive == 2) {
-								createNotification();
+							if(lCurrentTimesInFive == 3) {
+								if(!mIsNotificationTriggered) {
+									createNotification();
+								}
 								mIsFirstTimeInFive = true;
 								mMyBeaconsInFivem.clear();
-								EcoBeaconsApplication.setRealBackgroundMode();
+								//EcoBeaconsApplication.setRealBackgroundMode();
 								break;
 							}
 							mMyBeaconsInFivem.put(myBeacon, lCurrentTimesInFive);
@@ -350,6 +356,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 	}
 
 	private void createNotification() {
+		mIsNotificationTriggered = true;
 		Log.d(TAG, "CreateNotification");
 		Notification.Builder lBuilder = new Notification.Builder(this);
 		getBigTextStyle(lBuilder);
@@ -389,18 +396,6 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 		mNotificationManager.notify(2, lBuilder.build());
 	}
 
-	/*private void displayToast(double distance) {
-		int offsetX = 50;
-		int offsetY = 25;
-
-		Toast lToast = Toast.makeText(
-				(EcoBeaconsApplication) getBaseContext(), "you are "
-						+ distance + " far to the closest litter",
-				Toast.LENGTH_SHORT);
-		lToast.setGravity(Gravity.RIGHT | Gravity.TOP, offsetX, offsetY);
-		lToast.show();
-	}*/
-
 	/**
 	 * 
 	 * @param builder
@@ -408,16 +403,15 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 	 */
 	private Notification getBigTextStyle(Notification.Builder builder) {
 
-		long[] pattern = new long[]{1000,50,1000};
-		// Uri defaultSound =
-		// RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+		long[] pattern = new long[]{1000,500,1000, 500};
+		Uri defaultSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
 		builder.setContentTitle("Reduced BigText title")
 				.setContentText("Reduced content").setContentInfo("Info")
 				.setSmallIcon(R.drawable.icon_loop_small_small)
-				//.setVibrate(pattern)
+				.setVibrate(pattern)
 				.setLights(Color.BLUE, 1, 0)
-				//.setSound(defaultSound)
+				.setSound(defaultSound)
 				.setAutoCancel(false)
 				.setOngoing(true);
 				

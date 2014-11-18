@@ -16,6 +16,8 @@ import org.altbeacon.beaconreference.R;
 import uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication;
 import uk.ac.lincoln.lisc.recycling.LitterActivity;
 
+import android.annotation.SuppressLint;
+import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.Notification.Builder;
@@ -25,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -34,51 +37,71 @@ import android.graphics.Paint;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.graphics.Bitmap.Config;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.RemoteException;
+import android.print.PrintAttributes.Margins;
+import android.support.v4.view.MotionEventCompat;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+@SuppressLint("ClickableViewAccessibility")
 public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 	
-	protected static final String TAG = "NavigateToBinActivity";
-	private static final int NOTIFICATION_ID = 52;
+	protected static final String TAG              = "NavigateToBinActivity";
+	private static final String mRecyclingRegName  = "Recycling";
+	private static final String mVendingRegName    = "Vending";
 	
-	private BeaconManager beaconManager;
-	private ImageView imageView;
-	private static int mIdValue   = -1;
-	private int mBullseyeNotiIcon = 0;
-	private String mBinColour     = "";
-	private int mCounts           = 0;
+	private static final int NOTIFICATION_ID = 52;
+	private final int      mRecyclingMajorID = 999;
+	
+	private BeaconManager mBeaconManager;
+	private ImageView     mImageView;
+	private Bitmap        mBitmapRound;
+	private LinearLayout  mLinLayout;
+	private TextView      mTextView;
+	private static int mIdValue    = -1;
+	private int mBullseyeNotiIcon  = 0;
+	private String mBinColour      = "";
+	private String mStuffBought    = "";
+	private int mCounts            = 0;
+	private Boolean mIsReadyToSCAN =  false;
+	private Beacon mMyBinBeacon;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "ImageViewActivity");
+		Log.d(TAG, "OnCreate");
 
 		// Get the Intent used to start this Activity
 		Intent intent = getIntent();
 
 		// Make a new ImageView
-		imageView = new ImageView(getApplicationContext());
-
-		beaconManager = BeaconManager.getInstanceForApplication(this);
-		beaconManager
-				.getBeaconParsers()
-				.add(new BeaconParser()
-						.setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+		mImageView = new ImageView(getApplicationContext());
 		
-		TypedArray imgs = getResources().obtainTypedArray(R.array.image_ids);
-		Bitmap bitmapRound;
+		mBeaconManager = BeaconManager.getInstanceForApplication(this);
+		mBeaconManager.getBeaconParsers()
+				.add(new BeaconParser()
+				.setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+			
 		if(intent.getIntExtra("Noti", -1) != -1) {
-			Log.d(TAG,  "NotificationBack");
+			mIsReadyToSCAN = true;
 			NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			manager.cancel(NOTIFICATION_ID);
 			int lImageID = intent.getIntExtra("NotiID", -1);
@@ -86,29 +109,91 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 				mIdValue = lImageID;
 				Log.d(TAG,  String.valueOf(mIdValue));
 			}
-			bitmapRound = getRoundedCornerBitmap(getResources().getDrawable(R.drawable.concentric), true);
-			imageView.setImageBitmap(bitmapRound);
-			imageView.setImageAlpha(150);
-			imageView.setImageResource(R.drawable.blink_frame);
+			mBitmapRound = getRoundedCornerBitmap(getResources().getDrawable(R.drawable.concentric), true);
+			mImageView.setImageBitmap(mBitmapRound);
+			mImageView.setImageAlpha(150);
+			mImageView.setImageResource(R.drawable.blink_frame);
 			BitmapDrawable bitDraw = new BitmapDrawable(getResources(), 
 					BitmapFactory.decodeResource(getResources(), getBinColor(mIdValue)));
-			imageView.setBackground(bitDraw);
-			AnimationDrawable frameAnimation = (AnimationDrawable) imageView.getDrawable();
+			mImageView.setBackground(bitDraw);
+			AnimationDrawable frameAnimation = (AnimationDrawable) mImageView.getDrawable();
 			frameAnimation.start();
-			setContentView(imageView);
-			  
+			setContentView(mImageView);  
 		}
-		else {
-			mIdValue = intent.getIntExtra(VendingActivity.EXTRA_RES_ID, 0);
-			bitmapRound = getRoundedCornerBitmap(imgs.getDrawable(mIdValue), false);
-			imageView.setImageBitmap(bitmapRound);
-			imageView.setImageAlpha(150);
+		else { //TODO: Something that onDestroy can check if mIdValue > 3
+			
+			mIdValue    = intent.getIntExtra(VendingActivity.EXTRA_RES_ID, 0);
+			
+			mLinLayout = new LinearLayout(getApplicationContext());
+			LayoutParams lpView    = new LayoutParams(LayoutParams.WRAP_CONTENT, 
+					LayoutParams.WRAP_CONTENT);
+			LinearLayout.LayoutParams centerGravityParams = new LinearLayout.LayoutParams(
+	                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			
+			centerGravityParams.gravity   = Gravity.CENTER_HORIZONTAL;
+			centerGravityParams.topMargin = 200;
+			mLinLayout.setOrientation(LinearLayout.VERTICAL);
+			
+			TypedArray imgs = getResources().obtainTypedArray(R.array.image_ids);
+			mBitmapRound    = getRoundedCornerBitmap(imgs.getDrawable(mIdValue), false);
+			imgs.recycle();
+			
+			mImageView.setImageBitmap(mBitmapRound);
+			mImageView.setImageAlpha(140);
+			mImageView.setLayoutParams(lpView);
 			BitmapDrawable bitDraw = new BitmapDrawable(getResources(), 
 					BitmapFactory.decodeResource(getResources(), getBinColor(mIdValue)));
-			imageView.setBackground(bitDraw);
-			setContentView(imageView);
+			mLinLayout.setBackground(bitDraw);
+			mLinLayout.addView(mImageView, centerGravityParams);
+			if(mIdValue < 4) {
+				mTextView = new TextView(getApplicationContext());
+				Typeface font = Typeface.createFromAsset(getBaseContext().getAssets(),
+						"fonts/Maximum.ttf");
+				mTextView.setText("This is the bin you should look for to dispose your " + mStuffBought +
+						"\n" + "This App will guide you to the closest recycling point.");
+				mTextView.setTypeface(font, Typeface.NORMAL);
+				mTextView.setTextSize(25);
+				mTextView.setTextColor(Color.BLACK);
+				centerGravityParams.topMargin = 70;
+				mLinLayout.addView(mTextView, centerGravityParams);
+				new CountDownTimer(6000, 2000) {
+					
+					@Override
+					public void onTick(long millisUntilFinished) {
+						// TODO Auto-generated method stub
+					}
+					
+					@Override
+					public void onFinish() {
+						if(mStuffBought.equals("WEDGE")) {
+							mStuffBought = "SANDWICH";
+						}
+						mTextView.setText("Touch the screen, keep calm and enjoy your "+ mStuffBought + ".");
+						//TODO: TOAST "You will be notified when close to a recycle bin"
+					}
+				}.start();
+				
+			}
+			mLinLayout.setOnTouchListener(new View.OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					int action = MotionEventCompat.getActionMasked(event);
+					Log.d(TAG, "Touch detected: " + action);
+					Log.d(TAG, "Action UP: " + MotionEvent.ACTION_UP);
+					if (action == MotionEvent.ACTION_UP) {
+						//NavigateToBinActivity.this.finish();
+						Intent startMain = new Intent(Intent.ACTION_MAIN);
+						startMain.addCategory(Intent.CATEGORY_HOME);
+						startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						getApplicationContext().startActivity(startMain);
+					}
+					return true;
+				}
+			});
+			setContentView(mLinLayout);
 		}
-		beaconManager.bind(this);
+		mBeaconManager.bind(this);
 	}
 	
 
@@ -124,22 +209,26 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 		case 0:
 			lBinToDisplay     = R.drawable.yellow_bin;
 			mBullseyeNotiIcon = R.drawable.bullseye_icon_yellow;
+			mStuffBought      = "CAN";
 			mBinColour        = "YELLOW";
 			break;
 		case 1:
 			lBinToDisplay     = R.drawable.blue_bin;
 			mBullseyeNotiIcon = R.drawable.bullseye_icon_blue;
 			mBinColour        = "BLUE";
+			mStuffBought      = "COFFEE";
 			break;
 		case 2:
 			lBinToDisplay     = R.drawable.red_bin;
 			mBullseyeNotiIcon = R.drawable.bullseye_icon_red;
 			mBinColour        = "RED";
+			mStuffBought      = "WEDGE";
 			break;
 		case 3:
 			lBinToDisplay     = R.drawable.red_bin;
 			mBullseyeNotiIcon = R.drawable.bullseye_icon_red;
 			mBinColour        = "RED";
+			mStuffBought      = "SODA";
 			break;
 		case 4:
 			lBinToDisplay     = R.drawable.no_recyclable;
@@ -159,8 +248,8 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 	@Override
 	public void onPause() {
 		Log.d(TAG, "OnPause Activity");
-		Log.d(TAG, "Value of Image: " + String.valueOf(mIdValue));
 		super.onPause();
+		mIsReadyToSCAN =  true;
 		if(mBullseyeNotiIcon != 0) {
 			final Intent notificationIntent = new Intent(getApplicationContext(),
 					NavigateToBinActivity.class);
@@ -176,16 +265,19 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 					(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			lNotificationManager.notify(NOTIFICATION_ID, lBuilder.setContentIntent(pendingIntent).build());
 		}
-		
 	}
 	
-	
+	/**
+	 * Create bullseye Notification 
+	 * @param builder
+	 * @return
+	 */
 	private Notification getBigTextStyle(Notification.Builder builder) {
 		builder.setSmallIcon(mBullseyeNotiIcon)
 		//.setVibrate(pattern)
 		.setLights(Color.BLUE, 1, 0)
 		//.setSound(defaultSound)
-		.setAutoCancel(false)
+		.setAutoCancel(true) //TODO: Change False
 		.setOngoing(true);
 		
 		return new Notification.BigTextStyle(builder)
@@ -197,11 +289,11 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, "onDestroyGrid");
+		Log.d(TAG, "onDestroy");
 		super.onDestroy();
 		try {
-			beaconManager.stopRangingBeaconsInRegion(EcoBeaconsApplication.getRegion("Vending"));
-			beaconManager.unbind(this);
+			//beaconManager.stopRangingBeaconsInRegion(EcoBeaconsApplication.getRegion("Vending"));
+			mBeaconManager.unbind(this);
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage());
 		}
@@ -209,31 +301,49 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 
 	@Override
 	public void onBeaconServiceConnect() {
-		Log.d(TAG, "onBeaconService");
-		beaconManager.setRangeNotifier(new RangeNotifier() {
+		Log.d(TAG, "onBeaconService of ActivityNavigateToBIN");
+		mBeaconManager.setRangeNotifier(new RangeNotifier() {
 
 			@Override
 			public void didRangeBeaconsInRegion(Collection<Beacon> beacons,
 					Region region) {
-				Log.d(TAG, String.valueOf(beacons.size()));
-				if(mBullseyeNotiIcon != 0) {
-					if (beacons.iterator().hasNext()) {
-						Beacon lMyBeacon = beacons.iterator().next();
-						Log.d(TAG, String.valueOf(lMyBeacon.getId2()));
-						String ldistance = "You are "
-								+ round(lMyBeacon.getDistance(), 2)
-								+ "m far to the closest litter";
-						toastDistance(ldistance);
-						if (lMyBeacon.getId2().toInt() == 70
-								&& lMyBeacon.getDistance() < 2) {
-							mCounts++;
-							Log.d(TAG, "mCounts: " + mCounts);
-							if(mCounts > 1 && !EcoBeaconsApplication.getCurrentActivity().contains("Litter")) {
-								Log.d(TAG, "Start Litter Intent");
-								mCounts = 0;
-								Intent lLitterIntent = new Intent(getApplicationContext(), LitterActivity.class);
-								lLitterIntent.putExtra("bullseye", NOTIFICATION_ID);
-								startActivity(lLitterIntent);
+				Log.d(TAG, "Beacons detected: " + String.valueOf(beacons.size()));
+				if(mBullseyeNotiIcon != 0 && mIsReadyToSCAN && beacons.size() > 0) {
+					Beacon lAuxBeacon;
+					double lClosestDistance = 0.0;
+					for (Beacon myBeacon : beacons) {
+						lAuxBeacon          = myBeacon;
+						//double lAuxDistance = lAuxBeacon.getDistance();
+						double lAuxDistance = getEasiDistance(lAuxBeacon.getTxPower(), lAuxBeacon.getRssi());
+						if(lClosestDistance == 0) {
+							lClosestDistance = lAuxDistance;
+							mMyBinBeacon     = lAuxBeacon;
+						}
+						else if(lAuxDistance < lClosestDistance){
+							lClosestDistance = lAuxDistance;
+							mMyBinBeacon     = lAuxBeacon;
+						}
+					}
+						
+					String ldistance = "You are "
+							+ round(lClosestDistance, 2)
+							+ "m far to the closest litter ( "+ mMyBinBeacon.getId2() + " )";
+					toastDistance(ldistance);
+					if (mMyBinBeacon.getId2().toInt() == mRecyclingMajorID
+							&& lClosestDistance < 1.5) {
+						mCounts++;
+						Log.d(TAG, "mCounts: " + mCounts);
+						//Log.d(TAG, EcoBeaconsApplication.getCurrentActivity());
+						if(mCounts > 2 ) { //&& !EcoBeaconsApplication.getCurrentActivity().contains("Litter")
+							Intent lLitterIntent = new Intent(getApplicationContext(), LitterActivity.class);
+							lLitterIntent.putExtra("bullseye", NOTIFICATION_ID);
+							startActivity(lLitterIntent);
+							try {
+								//mBeaconManager.stopMonitoringBeaconsInRegion(EcoBeaconsApplication.getRegion(mRecyclingRegName));
+								mBeaconManager.stopRangingBeaconsInRegion(EcoBeaconsApplication.getRegion(mRecyclingRegName));
+								mBeaconManager.unbind(NavigateToBinActivity.this);
+							} catch (Exception e) {
+								Log.e(TAG, e.getMessage());
 							}
 						}
 					}
@@ -252,12 +362,37 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 		});
 
 		try {
-			beaconManager.startRangingBeaconsInRegion(EcoBeaconsApplication.getRegion("Vending"));
+			mBeaconManager.stopRangingBeaconsInRegion(EcoBeaconsApplication.getRegion(mVendingRegName));
+			//mBeaconManager.stopMonitoringBeaconsInRegion(EcoBeaconsApplication.getRegion(mVendingRegName));
+			mBeaconManager.startRangingBeaconsInRegion(EcoBeaconsApplication.getRegion(mRecyclingRegName));
 
 		} catch (RemoteException e) {
 			Log.e(TAG, e.getMessage());
 		}
 	}
+	
+	/**
+	 * Roughly estimates the distance to the iBeacon
+	 * Calculation obtained from http://stackoverflow.com/questions/20416218/understanding-ibeacon-distancing
+	 *  
+	 * @param txPower RSSI of the iBeacon at 1 meter
+	 * @param rssi measured RSSI by the user device
+	 * @return
+	 */
+	protected double getEasiDistance(int txPower, double rssi) {
+		if (rssi == 0) {
+			return -1.0; // if we cannot determine accuracy, return -1.
+		}
+
+		double ratio = rssi*1.0/txPower;
+		if (ratio < 1.0) {
+			return Math.pow(ratio,10);
+		}
+		else {
+			double accuracy =  (0.89976)*Math.pow(ratio,7.7095) + 0.111;    
+			return accuracy;
+		}
+	} 
 	
 	public void toastDistance(final String ldistance) {
 		new Thread(new Runnable() {
@@ -265,7 +400,7 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 			@Override
 			public void run() {
 				
-				imageView.post(new Runnable() {
+				mImageView.post(new Runnable() {
 					
 					@Override
 					public void run() {
@@ -286,23 +421,23 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 	     
 	     if(square){
 	      if(bitmap.getWidth() < bitmap.getHeight()){
-	       width = bitmap.getWidth();
+	       width  = bitmap.getWidth();
 	       height = bitmap.getWidth();
 	      } else {
-	       width = bitmap.getHeight();
+	    	  width  = bitmap.getHeight();
 	          height = bitmap.getHeight();
 	      }
 	     } else {
 	      height = bitmap.getHeight();
-	      width = bitmap.getWidth();
+	      width  = bitmap.getWidth();
 	     }
 	     
 	        Bitmap output = Bitmap.createBitmap(width, height, Config.ARGB_8888);
 	        Canvas canvas = new Canvas(output);
 
-	        final int color = 0xff424242;
+	        final int color   = 0xff424242;
 	        final Paint paint = new Paint();
-	        final Rect rect = new Rect(0, 0, width, height);
+	        final Rect rect   = new Rect(0, 0, width, height);
 	        final RectF rectF = new RectF(rect);
 	        final float roundPx = 90; 
 

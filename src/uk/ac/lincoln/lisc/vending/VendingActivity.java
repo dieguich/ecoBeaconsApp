@@ -83,8 +83,8 @@ public class VendingActivity extends Activity {
 
 				// Add the ID of the thumbnail to display as an Intent Extra
 				AlertDialog alertDialog = new AlertDialog.Builder(VendingActivity.this).create();
-				alertDialog.setTitle("Nothing to recycle..");
-				alertDialog.setMessage("Just throw it to any litter");
+				alertDialog.setTitle("Nothing to recycle this time :)");
+				alertDialog.setMessage("Just throw it to any litter in the ground-floor");
 				alertDialog.setIcon(R.drawable.icon_loop_small);
 				alertDialog.setCanceledOnTouchOutside(true);
 				alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
@@ -104,28 +104,20 @@ public class VendingActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		EcoBeaconsApplication.appResumed();
+		//EcoBeaconsApplication.appResumed();
 	}
 
 	@Override
 	protected void onPause() {
 		Log.d(TAG, "onPauseRanging");
 		super.onPause();
-		EcoBeaconsApplication.appPaused();
+		//EcoBeaconsApplication.appPaused();
 	}
 
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroyGrid");
 		super.onDestroy();
-		/*try {
-			Intent startMain = new Intent(this, VendingActivity.class);
-			startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startMain.putExtra("Notification", 2);
-			this.startActivity(startMain);
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-		}*/
 	}
 	
 	private ArrayList<ImageItem> getData() {
@@ -138,7 +130,6 @@ public class VendingActivity extends Activity {
 					imgs.getResourceId(i, -1));
 			imageItems.add(new ImageItem(bitmap, lImageCaptions[i]));
 		}
-
 		return imageItems;
 
 	}

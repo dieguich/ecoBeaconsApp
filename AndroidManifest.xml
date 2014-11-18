@@ -59,7 +59,8 @@
         </activity>
         <activity android:name="uk.ac.lincoln.lisc.recycling.LitterActivity" 
             android:label="@string/app_name" 
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" >
                 </action>

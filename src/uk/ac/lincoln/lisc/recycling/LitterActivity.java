@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.altbeacon.beaconreference.R;
 
+import uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication;
 import uk.ac.lincoln.lisc.vending.NavigateToBinActivity;
 import uk.ac.lincoln.lisc.vending.VendingActivity;
 
@@ -40,7 +41,7 @@ public class LitterActivity extends Activity{
 		int lRandomNum = randInt(0, 9);
 		int lImageResource = getResources().getIdentifier("drawable/pic_"+lRandomNum, null, getPackageName());
 		mImageLitter.setBackgroundResource(lImageResource);
-		new CountDownTimer(3000, 1000) {
+		new CountDownTimer(500, 250) {
 			
 			@Override
 			public void onTick(long millisUntilFinished) {
@@ -59,7 +60,7 @@ public class LitterActivity extends Activity{
 					
 					@Override
 					public void onCancel(DialogInterface dialog) {
-						LitterActivity.this.finish();
+						//LitterActivity.this.finish();
 						
 					}
 				});
@@ -90,5 +91,11 @@ public class LitterActivity extends Activity{
 	    int randomNum = rand.nextInt((max - min) + 1) + min;
 
 	    return randomNum;
+	}
+	
+	@Override
+	protected void onDestroy() {
+		Log.d(TAG, "onDestroy");
+		super.onDestroy();
 	}
 }

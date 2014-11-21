@@ -12,11 +12,11 @@
     
     <string-array name="image_captions">
         <item>Cans</item>
-        <item>Coffee mugs</item>
+        <item>Coffee cups</item>
         <item>Paper food wrappers</item>
         <item>Glass bottles</item>
-        <item>Food boxes</item>
-        <item>Candy wrappers</item>
+        <item>Food cartons</item>
+        <item>Sweet wrappers</item>
     </string-array>
 
 </resources>

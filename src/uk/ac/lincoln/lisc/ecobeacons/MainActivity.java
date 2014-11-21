@@ -32,7 +32,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
-import android.os.Vibrator;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -60,8 +59,9 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 	private static FrameLayout     mHeadingsFrameLayout, mTipsFrameLayout;
 	
 	private BeaconManager mBeaconManager;
-	private final String mVendingRegion = "Vending";
-	private final int mVendingMajorID   = 111;
+	private final String mVendingRegion      = "Vending";
+	private final int mVendingMajorID        = 111;
+	private final double mDistanceToVending  = 2;
 	private Boolean mIsFirstTimeInFive       = true;
 	private Boolean mIsNotificationTriggered = false;
 	
@@ -266,7 +266,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 						getEasiDistance(myBeacon.getTxPower(), myBeacon.getRssi()) + "m  far";
 				Log.d(TAG, lToToast);
 				//toast(lToToast);
-				if(myBeacon.getId2().toInt() == mVendingMajorID && lDistanceFromBeacon < 1.6) {
+				if(myBeacon.getId2().toInt() == mVendingMajorID && lDistanceFromBeacon < mDistanceToVending) {
 					if(mIsFirstTimeInFive) {
 						
 						if(EcoBeaconsApplication.getCurrentActivity() != null && EcoBeaconsApplication.getCurrentActivity().contains("Vending")) {
@@ -275,7 +275,6 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 									mBeaconManager.stopRangingBeaconsInRegion(EcoBeaconsApplication.getRegion(mVendingRegion));
 									mBeaconManager.unbind(this);
 								} catch (RemoteException e) {
-									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}		
 						}else{
@@ -292,7 +291,7 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 								EcoBeaconsApplication.setRangingMode(2);
 								//EcoBeaconsApplication.setNearMode();
 							}
-							if(lCurrentTimesInFive == 3) {
+							if(lCurrentTimesInFive == 2) {
 								if(!mIsNotificationTriggered) {
 									createNotification();
 								}
@@ -404,22 +403,22 @@ public class MainActivity extends FragmentActivity implements BeaconConsumer,
 	private Notification getBigTextStyle(Notification.Builder builder) {
 
 		long[] pattern = new long[]{1000,500,1000, 500};
-		Uri defaultSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+		Uri lDefaultSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
 		builder.setContentTitle("Reduced BigText title")
 				.setContentText("Reduced content").setContentInfo("Info")
-				.setSmallIcon(R.drawable.icon_loop_small_small)
+				.setSmallIcon(R.drawable.icon_loop_small_small_lab)
 				.setVibrate(pattern)
 				.setLights(Color.BLUE, 1, 0)
-				.setSound(defaultSound)
+				.setSound(lDefaultSound)
 				.setAutoCancel(false)
 				.setOngoing(true);
 				
 
 		return new Notification.BigTextStyle(builder)
-				.bigText("OR are you about to buy something to eat or drink? \n You can learn how and where to recycle with this App!!")
-				.setBigContentTitle("Have you bought something?")
-				.setSummaryText("Close the loop!").build();
+				.bigText(getString(R.string.vending_notificatio_extra))
+				.setBigContentTitle(getString(R.string.vending_notificatio_tittle))//
+				.setSummaryText(getString(R.string.app_name)).build();
 	}
 
 	/**

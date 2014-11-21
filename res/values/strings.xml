@@ -1,11 +1,24 @@
 <resources>
 
     <string name="app_name">Close the loop! Lab edition</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="o_stuff">Other stuff</string>
     <string name="icon">Close the loop (Lab edition)</string>
-    <string name="theAppsHelps">Tha App that helps you to enhance your recycling habits in the Atrium</string>
+    
+    <string name="theAppsHelps">This App helps you to improve your recycling habits</string>
+    
+    <string name="vending_notificatio_tittle">"Have you bought something?"</string>
+    <string name="vending_notificatio_extra">"OR are you about to buy something to eat or drink? Please select Yes or No below."</string>
+    
+    <string name="recycling_notificatio_tittle">"Recycling Bin radar"</string>
+    <string name="recycling_notificatio_extra">"Click here to see how far you are to the closest "</string>
+    
+    <string name="recycling_text_touch">"Touch the screen and enjoy your "</string>
+    <string name="recycling_toast_touch">"Thanks! Remember to check your notifications when finished your "</string>
+    
+    <string name="recycling_toast_distance_1">"You're getting closer to the bin! You're roughly "</string>
+    <string name="recycling_toast_distance_2">"m far to the closest recycling point"</string> <!-- which is in the fisrt floor -->
+    
     
     <string-array name="TipNumber">
         <item>Tip 1: Recycle</item>

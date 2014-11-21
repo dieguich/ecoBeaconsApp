@@ -157,12 +157,12 @@ public class EcoBeaconsApplication extends Application implements
 		if(region.getUniqueId().equalsIgnoreCase(mVendingRegName)) {
 			setRangingMode(1);
 		}
-		if(mCurrentAct != null) {
+		if(mCurrentAct != null && !mCurrentAct.getClass().getName().contains("Navigate")) {
 			mCurrentAct.runOnUiThread(new Runnable() {
 				
 				@Override
 				public void run() {
-					toast("READY");
+					toast("READY?");
 				}
 			});
 		}
@@ -287,7 +287,7 @@ public class EcoBeaconsApplication extends Application implements
 		mRegionList = new ArrayList<Region>();
 		mRegionList.add(mBeaconsRegion);
 		mRegionList.add(new Region(mRecyclingRegName, Identifier.parse(mIBeaconRecyclingUUID),
-				Identifier.fromInt(mRecyclingMajorID), null));
+				Identifier.fromInt(mRecyclingMajorID), Identifier.fromInt(mRecyclingMinorID)));
 	}
 	
 	public static Integer getRangingMode() {

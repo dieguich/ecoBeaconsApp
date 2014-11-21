@@ -12,34 +12,29 @@ import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
 import org.altbeacon.beaconreference.R;
 
-
 import uk.ac.lincoln.lisc.ecobeacons.EcoBeaconsApplication;
 import uk.ac.lincoln.lisc.recycling.LitterActivity;
-
 import android.annotation.SuppressLint;
 import android.app.ActionBar.LayoutParams;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Notification;
-import android.app.Notification.Builder;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.graphics.Bitmap.Config;
-import android.graphics.PorterDuff.Mode;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -47,17 +42,13 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.RemoteException;
 import android.os.Vibrator;
-import android.print.PrintAttributes.Margins;
 import android.support.v4.view.MotionEventCompat;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -85,34 +76,41 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 	private Beacon mMyBinBeacon;
 	private int mWaitCounter       = 0;
 	
+	private AlarmManager mAlarmManager;
+	private static final long INITIAL_ALARM_DELAY = 120 * 1000L;
+	private PendingIntent mAlarmPendingIntent;
+	
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "OnCreate");
-		
-
 		// Get the Intent used to start this Activity
 		Intent intent = getIntent();
-
+		
 		// Make a new ImageView
 		mImageView = new ImageView(getApplicationContext());
 		
 		mBeaconManager = BeaconManager.getInstanceForApplication(this);
+		Log.d(TAG, "BeaconManager1");
 		mBeaconManager.getBeaconParsers()
 				.add(new BeaconParser()
 				.setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
+		Log.d(TAG, "BeaconManager2");
 			
 		if(intent.getIntExtra("Noti", -1) != -1) {
+			Log.d(TAG, "Intent noti");
 			mIsReadyToSCAN = true;
-			NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-			manager.cancel(NOTIFICATION_ID);
+			NotificationManager lManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			lManager.cancel(NOTIFICATION_ID);
+			Log.d(TAG, "Cancel noti");
 			int lImageID = intent.getIntExtra("NotiID", -1);
 			if(lImageID != -1) {
 				mIdValue = lImageID;
 				Log.d(TAG,  String.valueOf(mIdValue));
 			}
+			Log.d(TAG, "get other Intent notiID");
 			mWaitCounter = 4;
 			mBitmapRound = getRoundedCornerBitmap(getResources().getDrawable(R.drawable.concentric), true);
 			mImageView.setImageBitmap(mBitmapRound);
@@ -123,8 +121,9 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 			mImageView.setBackground(bitDraw);
 			AnimationDrawable frameAnimation = (AnimationDrawable) mImageView.getDrawable();
 			frameAnimation.start();
+			Log.d(TAG, "SetContentView");
 			setContentView(mImageView);
-			
+			Log.d(TAG, "SetContentView_Done");
 		}
 		else { //TODO: Something that onDestroy can check if mIdValue > 3
 			
@@ -156,26 +155,33 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 				Typeface font = Typeface.createFromAsset(getBaseContext().getAssets(),
 						"fonts/Maximum.ttf");
 				mTextView.setText("This is the bin you should look for to dispose your " + mStuffBought +
-						"\n" + "This App will guide you to the closest recycling point.");
+						"\n" + "This App will guide you to the closest recycling bin.");
 				mTextView.setTypeface(font, Typeface.NORMAL);
 				mTextView.setTextSize(25);
 				mTextView.setTextColor(Color.BLACK);
 				centerGravityParams.topMargin = 70;
 				mLinLayout.addView(mTextView, centerGravityParams);
 				new CountDownTimer(6000, 2000) {
+				
 					
 					@Override
 					public void onTick(long millisUntilFinished) {
-						// TODO Auto-generated method stub
 					}
 					
 					@Override
 					public void onFinish() {
+						
 						if(mStuffBought.equals("PAPER")) {
 							mStuffBought = "FOOD";
 						}
-						mTextView.setText("Touch the screen, keep calm and enjoy your "+ mStuffBought + ".");
-						//TODO: TOAST "You will be notified when close to a recycle bin"
+
+						mTextView.setText(getString(R.string.recycling_text_touch) 
+								+ mStuffBought + "!");
+						toastToUI(getString(R.string.recycling_toast_touch) +
+								mStuffBought, Toast.LENGTH_SHORT);
+						toastToUI(getString(R.string.recycling_toast_touch) +
+								mStuffBought, Toast.LENGTH_LONG);
+
 					}
 				}.start();
 				
@@ -255,8 +261,20 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 	public void onPause() {
 		Log.d(TAG, "OnPause Activity");
 		super.onPause();
+		if(mIdValue < 4 && !mIsReadyToSCAN) {
+			Log.d(TAG, "Alarm started");
+			mAlarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+			Intent lAlarmIntent = new Intent("uk.ac.lincoln.lisc.vending.demoactivity");
+			mAlarmPendingIntent = PendingIntent.getActivity(getBaseContext(), 0, 
+					lAlarmIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+			
+            mAlarmManager.set(AlarmManager.RTC_WAKEUP  , System.currentTimeMillis() + INITIAL_ALARM_DELAY , 
+            		mAlarmPendingIntent);
+		}
+		
 		mIsReadyToSCAN =  true;
 		if(mBullseyeNotiIcon != 0) {
+			Log.d(TAG, "Create Notifications");
 			final Intent notificationIntent = new Intent(getApplicationContext(),
 					NavigateToBinActivity.class);
 			notificationIntent.putExtra("NotiId", mIdValue);
@@ -271,6 +289,11 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 					(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			lNotificationManager.notify(NOTIFICATION_ID, lBuilder.setContentIntent(pendingIntent).build());
 		}
+		/*try {
+			mBeaconManager.unbind(this);
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+		}*/
 	}
 	
 	/**
@@ -281,23 +304,28 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 	private Notification getBigTextStyle(Notification.Builder builder) {
 		builder.setSmallIcon(mBullseyeNotiIcon)
 		//.setVibrate(pattern)
-		.setLights(Color.BLUE, 1, 0)
+		.setLights(Color.BLUE, 1000, 1000)
 		//.setSound(defaultSound)
 		.setAutoCancel(true) //TODO: Change False
 		.setOngoing(true);
 		
 		return new Notification.BigTextStyle(builder)
-		.bigText("Click here to see how far you are to the closest " + mBinColour + " bin")
-		.setBigContentTitle("Recycling Bin radar")
-		.setSummaryText("Close the loop!").build();
+		.bigText(getString(R.string.recycling_notificatio_extra) + mBinColour + " bin")
+		.setBigContentTitle(getString(R.string.recycling_notificatio_tittle))
+		.setSummaryText(getString(R.string.app_name)).build();
 	}
 
 	@Override
 	public void onDestroy() {
-		Log.d(TAG, "onDestroy");
+		Log.d("Alarm", "onDestroy");
 		super.onDestroy();
+		Log.d("Alarm", "Super");
 		try {
 			//beaconManager.stopRangingBeaconsInRegion(EcoBeaconsApplication.getRegion("Vending"));
+			if(mAlarmManager != null && mAlarmPendingIntent != null) {
+				Log.d("Alarm", "DestroyAlarm");
+				mAlarmManager.cancel(mAlarmPendingIntent);
+			}
 			mBeaconManager.unbind(this);
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage());
@@ -314,7 +342,6 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 					Region region) {
 				Log.d(TAG, "Beacons detected: " + String.valueOf(beacons.size()));
 				mWaitCounter++;
-				toastDistance("Counter: " + mWaitCounter);
 				if(mBullseyeNotiIcon != 0 && mIsReadyToSCAN && beacons.size() > 0 && mWaitCounter > 4) {
 					Beacon lAuxBeacon;
 					double lClosestDistance = 0.0;
@@ -332,44 +359,43 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 						}
 					}
 						
-					String lDistance = "You are around"
+					String lDistance = getString(R.string.recycling_toast_distance_1)
 							+ round(lClosestDistance, 2)
-							+ "m far to the closest litter ( "+ mMyBinBeacon.getId3() + " )";
+							+ getString(R.string.recycling_toast_distance_2);
 					if(EcoBeaconsApplication.getCurrentActivity() != null) {
-						toastDistance(lDistance);
+						toastToUI(lDistance, Toast.LENGTH_LONG);
 					}
 					Vibrator mVibratorPattern;
 					mVibratorPattern = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
 					long[] lPattern; 
-					if(lClosestDistance < 5 ) {
-						if (lClosestDistance > 4) {
-							lPattern = new long[] {0, 500, 100};
-						}
-						else if(lClosestDistance > 3) {
+					if(lClosestDistance < 3.5 ) {
+						
+						if(lClosestDistance > 3) {
 							EcoBeaconsApplication.setNearMode();
-							lPattern = new long[] {0, 500, 300, 500, 100};
+							lPattern = new long[] {0, 500, 100};
 						}
 						else if(lClosestDistance >= 2) {
 							
-							lPattern = new long[] {0, 400, 300, 400, 300, 400, 100};
+							lPattern = new long[] {0, 400, 300, 400, 100};
+						}
+						else if (lClosestDistance >= 1){
+							lPattern = new long[] {0, 400, 300, 400, 300, 100};
 						}
 						else {
 							lPattern = new long[] {0, 200, 200, 200, 200, 200, 200, 200, 100};
 						}
 						mVibratorPattern.vibrate(lPattern, -1);
 					}
-					
-						
+
 					if (mMyBinBeacon.getId2().toInt() == mRecyclingMajorID
 							&& lClosestDistance < 1) {
-						//long[] lPattern = {0, 500, 300, 500, 300, 500, 300, 500, 100};
-						//mVibratorPattern.vibrate(lPattern, -1);
+		
 						mCounts++;
 						Log.d(TAG, "mCounts: " + mCounts);
-						//Log.d(TAG, EcoBeaconsApplication.getCurrentActivity());
-						if(mCounts > 2 ) { //&& !EcoBeaconsApplication.getCurrentActivity().contains("Litter")
+						if(mCounts == 25 ) { //&& !EcoBeaconsApplication.getCurrentActivity().contains("Litter")
 							Intent lLitterIntent = new Intent(getApplicationContext(), LitterActivity.class);
 							lLitterIntent.putExtra("bullseye", NOTIFICATION_ID);
+							lLitterIntent.putExtra("product_disposed", mStuffBought);
 							startActivity(lLitterIntent);
 							try {
 								//mBeaconManager.stopMonitoringBeaconsInRegion(EcoBeaconsApplication.getRegion(mRecyclingRegName));
@@ -427,7 +453,7 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 		}
 	} 
 	
-	public void toastDistance(final String ldistance) {
+	public void toastToUI(final String text, final int lenght) {
 		new Thread(new Runnable() {
 			
 			@Override
@@ -437,7 +463,8 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 					
 					@Override
 					public void run() {
-						Toast toast = Toast.makeText(getApplicationContext(), ldistance, Toast.LENGTH_SHORT);
+						Toast toast = Toast.makeText(getApplicationContext(), text, lenght);
+						toast.setGravity(Gravity.BOTTOM|Gravity.CENTER, 0, 0);
 						toast.show();
 						
 					}

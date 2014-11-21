@@ -228,7 +228,7 @@ public class NavigateToBinActivity extends Activity implements BeaconConsumer{
 			lBinToDisplay     = R.drawable.red_bin;
 			mBullseyeNotiIcon = R.drawable.bullseye_icon_red;
 			mBinColour        = "RED";
-			mStuffBought      = "SODA";
+			mStuffBought      = "POP";
 			break;
 		case 4:
 			lBinToDisplay     = R.drawable.no_recyclable;

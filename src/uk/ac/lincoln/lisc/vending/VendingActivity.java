@@ -83,8 +83,8 @@ public class VendingActivity extends Activity {
 
 				// Add the ID of the thumbnail to display as an Intent Extra
 				AlertDialog alertDialog = new AlertDialog.Builder(VendingActivity.this).create();
-				alertDialog.setTitle("Nothing to recycle this time :)");
-				alertDialog.setMessage("Just throw it to any litter in the ground-floor");
+				alertDialog.setTitle("Nothing to recycle this time");
+				alertDialog.setMessage("Please dispose in any litter bin on the ground-floor");
 				alertDialog.setIcon(R.drawable.icon_loop_small);
 				alertDialog.setCanceledOnTouchOutside(true);
 				alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {

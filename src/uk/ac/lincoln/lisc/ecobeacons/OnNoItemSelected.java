@@ -17,7 +17,7 @@ public class OnNoItemSelected extends BroadcastReceiver {
 	    if(mNoSelection.equals(action)) {
 			NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 			manager.cancel(lNotificationValue);
-			EcoBeaconsApplication.setRealBackgroundMode();
+			//EcoBeaconsApplication.setRealBackgroundMode();
 			Intent startMain = new Intent(Intent.ACTION_MAIN);
 			startMain.addCategory(Intent.CATEGORY_HOME);
 			startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

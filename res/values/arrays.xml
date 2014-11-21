@@ -13,10 +13,10 @@
     <string-array name="image_captions">
         <item>Cans</item>
         <item>Coffee cups</item>
-        <item>sandwich boxes</item>
-        <item>pop bottles</item>
-        <item>food cartons</item>
-        <item>sweet wrappers</item>
+        <item>Sandwich boxes</item>
+        <item>Pop bottles</item>
+        <item>Food cartons</item>
+        <item>Sweet wrappers</item>
     </string-array>
 
 </resources>

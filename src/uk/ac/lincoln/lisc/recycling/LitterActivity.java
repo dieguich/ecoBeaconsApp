@@ -14,16 +14,20 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 public class LitterActivity extends Activity{
 	
 	private ImageView mImageLitter;
 	protected static final String TAG = "LitterActivity";
+	private String mStuffDisposed;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +38,7 @@ public class LitterActivity extends Activity{
 		if(lNotiToDissmiss != -1) {
 			NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			manager.cancel(lNotiToDissmiss);
+			mStuffDisposed = lMyIntent.getStringExtra("product_disposed");
 		}
 		
 		setContentView(R.layout.litter_bg);
@@ -52,9 +57,16 @@ public class LitterActivity extends Activity{
 			@Override
 			public void onFinish() {
 				AlertDialog alertDialog = new AlertDialog.Builder(LitterActivity.this).create();
-				alertDialog.setTitle("You closed the loop!!");
-				alertDialog.setMessage("Congratulations!"); //TODO: Account your contribution
-				alertDialog.setIcon(R.drawable.icon_loop_small);
+				Typeface font = Typeface.createFromAsset(getBaseContext().getAssets(),
+						"fonts/Maximum.ttf");
+				TextView lTextView = new TextView(getApplicationContext());
+				lTextView.setText("You closed the loop by disposing of your " + mStuffDisposed + "!!");
+				lTextView.setTypeface(font, Typeface.NORMAL);
+				lTextView.setTextSize(25);
+				lTextView.setTextColor(Color.parseColor("#7FBA00"));
+				alertDialog.setCustomTitle(lTextView);
+				alertDialog.setMessage("Well done! Your support is appreciated!"); //TODO: Account your contribution
+				alertDialog.setIcon(R.drawable.icon_loop_small_small);
 				alertDialog.setCanceledOnTouchOutside(true);
 				alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
 					

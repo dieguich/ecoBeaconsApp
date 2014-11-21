@@ -57,6 +57,17 @@
                 </category>
             </intent-filter>
         </activity>
+        
+        <activity
+            android:name="uk.ac.lincoln.lisc.vending.DemoActivity"
+            android:label="DemoActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" >
+            <intent-filter>
+                <action android:name="uk.ac.lincoln.lisc.vending.demoactivity" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        
         <activity android:name="uk.ac.lincoln.lisc.recycling.LitterActivity" 
             android:label="@string/app_name" 
             android:screenOrientation="portrait"
@@ -66,6 +77,7 @@
                 </action>
             </intent-filter>
         </activity>
+        
         <receiver
 		    android:name="uk.ac.lincoln.lisc.ecobeacons.OnNoItemSelected"
 		    android:exported="false" >
@@ -73,6 +85,6 @@
 		        <action android:name="ecobeacons.NO_SELECTION" />
 		    </intent-filter>
 		</receiver>
+		
     </application>
-    
 </manifest>

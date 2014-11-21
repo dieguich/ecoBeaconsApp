@@ -32,14 +32,14 @@ import android.widget.Toast;
 public class EcoBeaconsApplication extends Application implements
 		BootstrapNotifier {
 
-	private static final long mIntitialScanPeriod    = 1100; // milliseconds
-	private static final long mIntitialScanFrequency = 3000; // milliseconds
+	//private static final long mIntitialScanPeriod    = 2200; // milliseconds
+	//private static final long mIntitialScanFrequency = 3300; // milliseconds
 																
-	private static final long mInRegionFirstTimeScanPeriod    = 1100; // milliseconds
-	private static final long mInRegionFirstTimeScanFrequency = 3000; // milliseconds
+	private static final long mInRegionFirstTimeScanPeriod    = 4400; // milliseconds
+	private static final long mInRegionFirstTimeScanFrequency = 500; // milliseconds
 	
 	private static final long mInRegionNearScanPeriod        = 1100; // milliseconds Less than 10meters
-	private static final long mInRegionNearTimeScanFrequency = 3000; // milliseconds  Less than 10meters
+	private static final long mInRegionNearTimeScanFrequency = 100; // milliseconds  Less than 10meters
 																
 	//private static final String mIBeaconVendingUUID = "B9407F30-F5F8-466E-AFF9-25556B57FE6D";
 	private static final String mIBeaconVendingUUID   = "A7AE2EB7-1F00-4168-B99B-A749BAC1CA64";
@@ -123,7 +123,7 @@ public class EcoBeaconsApplication extends Application implements
 				if (activity.getClass().getName().contains("NavigateToBinActivity")) {
 					Log.d(TAG, "NavigateActivity Created");
 					//mRegionBootstrap.disable();
-					mBeaconsRegion = getRegion(mRecyclingRegName);
+					mBeaconsRegion   = getRegion(mRecyclingRegName);
 					mRegionBootstrap = new RegionBootstrap(
 							(EcoBeaconsApplication) getApplicationContext(), mBeaconsRegion);
 				}
@@ -136,7 +136,7 @@ public class EcoBeaconsApplication extends Application implements
 		setRegionList();
 		mRegionBootstrap = new RegionBootstrap(this, getRegion(mVendingRegName));
 		mBeaconManager   = BeaconManager.getInstanceForApplication(this);
-		setRealBackgroundMode();
+		setRegionMode();
 	}
 
 	@Override
@@ -149,16 +149,16 @@ public class EcoBeaconsApplication extends Application implements
 	@Override
 	public void didEnterRegion(final Region region) {
 		Log.d(TAG, "OnRegion: " + region.getUniqueId());
-		setRegionMode();
+		//setRegionMode();
 		if(region.getUniqueId().equalsIgnoreCase(mVendingRegName)) {
 			setRangingMode(1);
 		}
-		if(mCurrentAct != null) {
+		if(mCurrentAct != null && !mCurrentAct.getClass().getName().contains("Navigate")) {
 			mCurrentAct.runOnUiThread(new Runnable() {
 				
 				@Override
 				public void run() {
-					toast("On Region " + region.getUniqueId());
+					toast("Ready?");
 				}
 			});
 		}
@@ -168,21 +168,25 @@ public class EcoBeaconsApplication extends Application implements
 	public void didExitRegion(final Region region) {
 		Log.d(TAG, "ExitRegion");
 		if(region.getUniqueId().contains("Vending")) {
-			setBackgroundMode();
+			//setBackgroundMode();
 		}
 		if(mCurrentAct != null) {
 			mCurrentAct.runOnUiThread(new Runnable() {
 				
 				@Override
 				public void run() {
-					toast("Exit Region " + region.getUniqueId());
-					
+					//toast("Exit Region " + region.getUniqueId());
 				}
 			});
 		}
 	}
 	public static String getCurrentActivity() {
-		return mCurrentAct.getClass().getName();
+		if(mCurrentAct != null) {
+			return mCurrentAct.getClass().getName();
+		}
+		else {
+			return null;
+		}
 	}
 
 	/**
@@ -201,21 +205,8 @@ public class EcoBeaconsApplication extends Application implements
 		return lRegion;
 	}
 
-	/*public static boolean isAppVisible() {
-		return mAppVisible;
-	}
-
-	public static void appResumed() {
-		Log.d(TAG, "App RESUMED");
-		mAppVisible = true;
-	}
-
-	public static void appPaused() {
-		Log.d(TAG, "App PAUSED");
-		mAppVisible = false;
-	}*/
-
-	public static void setBackgroundMode() {
+	
+	/*public static void setBackgroundMode() {
 		Log.d(TAG, "BackgroundMODE");
 		mBeaconManager.setBackgroundBetweenScanPeriod(mIntitialScanFrequency);
 		mBeaconManager.setForegroundBetweenScanPeriod(mIntitialScanFrequency);
@@ -244,6 +235,9 @@ public class EcoBeaconsApplication extends Application implements
 			Log.e(TAG, e.getMessage());
 		}
 	}
+	
+
+	}*/
 	
 	public static void setNearMode() {
 		Log.d(TAG, "NearMODE");
